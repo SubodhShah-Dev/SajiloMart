@@ -21,6 +21,8 @@
 | ADR-010 | Cash on Delivery first; Stripe preparation only until approved | Accepted | 2026-11-03 |
 | ADR-011 | Provider-independent backend | Accepted | 2026-11-03 |
 | ADR-012 | No application code during Phase 0 | Accepted | 2026-11-03 |
+| ADR-013 | npm workspaces and Sprint 1 foundation tooling | Accepted | 2026-11-03 |
+| ADR-014 | Unversioned health endpoint and API response envelope | Accepted | 2026-11-03 |
 
 ---
 
@@ -306,6 +308,71 @@ entities, migrations, APIs, or authentication.
 
 **Alternatives considered:** Scaffold early. Rejected to preserve the incremental
 review process.
+
+---
+
+## ADR-013 — npm workspaces and Sprint 1 foundation tooling
+
+**Status:** Accepted
+**Date:** 2026-11-03
+
+**Context:** Sprint 1 introduces a frontend and backend that must be installable,
+runnable, and verifiable without coupling their deployment. The project also needs
+a lint and test baseline before domain features arrive.
+
+**Decision:**
+
+- Use npm workspaces at the repository root with `frontend/` and `backend/`
+  packages and one lockfile.
+- Provide root convenience scripts for development, build, typecheck, lint, and
+  tests while keeping each application independently buildable.
+- Use `tsx` for backend development, `tsc` for production builds, Vite for the
+  frontend, ESLint for both applications, and Vitest + Supertest for backend
+  integration tests.
+- Pin TypeScript to `6.0.3` because the current `typescript-eslint` release
+  supports TypeScript `<6.1.0`.
+- Defer Redux Toolkit, React Router, Lucide, and Recharts until their features need
+  them.
+
+**Consequences:**
+
+- One install and lockfile simplify local development and review.
+- Workspace hoisting means dependency changes must be checked in both applications.
+- The TypeScript pin must be revisited when the lint toolchain supports TypeScript 7.
+- Tooling versions and scripts become part of the foundation contract.
+
+**Alternatives considered:** Separate package files and lockfiles per application;
+`ts-node`/`nodemon`; no lint or test tooling in Sprint 1. All were rejected because
+they add either coordination cost or verification gaps.
+
+---
+
+## ADR-014 — Unversioned health endpoint and API response envelope
+
+**Status:** Accepted
+**Date:** 2026-11-03
+
+**Context:** Sprint 1 needs a health endpoint and consistent client error handling,
+but no domain API exists yet and API versioning has not been approved.
+
+**Decision:**
+
+- Expose the health check at `GET /api/health`.
+- Use `{ success: true, data }` for success responses and
+  `{ success: false, error: { message, detail? } }` for errors.
+- Omit unexpected error details in production.
+- Defer URL versioning until the first domain endpoints are introduced.
+
+**Consequences:**
+
+- The frontend health client and error rendering depend on this envelope.
+- Future endpoints should follow the same response shape.
+- Moving to `/api/v1` later requires a deliberate, documented decision.
+- Centralized error handling remains the single place that formats failures.
+
+**Alternatives considered:** Versioning `/api/v1` immediately; returning framework
+default payloads; exposing error stacks. Immediate versioning was deferred as
+premature, default payloads are inconsistent, and exposing stacks is unsafe.
 
 ---
 

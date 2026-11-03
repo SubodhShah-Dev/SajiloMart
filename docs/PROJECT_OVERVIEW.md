@@ -1,6 +1,8 @@
 # SajiloMart — Project Overview
 
-> **Status:** Phase 0 planning. No application code exists yet.
+> **Status:** Sprint 1 — Basic project foundation implemented and in review. The
+> frontend and API run locally; catalog, authentication, and database work begin in
+> later sprints.
 
 ## 1. What SajiloMart is
 

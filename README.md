@@ -3,8 +3,9 @@
 A nationwide, multi-vendor ecommerce marketplace for Nepal, built incrementally
 from a simple product-browsing ecommerce site into a complete marketplace.
 
-> **Status:** Phase 0 — documentation and planning. No application code exists
-> yet. Application development starts with Sprint 1 after owner approval.
+> **Status:** Sprint 1 — Basic project foundation implemented and in review. The
+> React frontend and Express API run locally with a health check, logging, and
+> tests. Catalog, authentication, and database work begin in later sprints.
 
 ## Vision
 
@@ -33,6 +34,7 @@ document:
 | [Roles and Permissions](docs/ROLES_AND_PERMISSIONS.md) | Roles and incremental permission policy |
 | [Sprint Roadmap](docs/SPRINT_ROADMAP.md) | Sprint sequence and milestones |
 | [Sprint Template](docs/SPRINT_TEMPLATE.md) | Reusable sprint plan and report |
+| [Sprint 1 Report](docs/SPRINT_01_BASIC_FOUNDATION.md) | Foundation plan, verification, and completion report |
 | [Implementation Log](docs/IMPLEMENTATION_LOG.md) | Completed work |
 | [Decisions Log](docs/DECISIONS_LOG.md) | Architecture decisions and open questions |
 
@@ -49,9 +51,31 @@ Agent and developer rules are in [`AGENTS.md`](AGENTS.md).
 
 ## Getting started
 
-There is nothing to run yet. The monorepo applications, scripts, and environment
-templates are created in Sprint 1. Until then, review the documentation and
-approve the plan.
+Prerequisites: Node.js `>=22.12.0` and npm `>=11`.
+
+```bash
+npm install
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+npm run dev
+```
+
+- Frontend: <http://localhost:5173>
+- API: <http://localhost:5000>
+- Health check: <http://localhost:5000/api/health>
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the backend and frontend together |
+| `npm run dev:backend` | Start only the API |
+| `npm run dev:frontend` | Start only the web client |
+| `npm run build` | Build both applications |
+| `npm run typecheck` | Typecheck both applications |
+| `npm run lint` | Lint both applications |
+| `npm test` | Run backend integration tests |
+
+Real `.env` files are never committed. Application logs are written to
+`backend/logs/` and are ignored by Git.
 
 ## Development workflow
 

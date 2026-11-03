@@ -1,6 +1,6 @@
 # SajiloMart — Roles and Permissions
 
-> **Status:** Phase 0 initial policy. No permissions are implemented yet.
+> **Status:** Sprint 1 — infrastructure only. No permissions are implemented yet.
 >
 > This document evolves with each sprint. Add detailed rows only when the
 > corresponding feature is implemented or formally planned. Do not treat future
@@ -43,7 +43,9 @@ delivery addresses only, and it never scopes administrative authority.
 
 ## 4. Current implementation status
 
-**Implemented permissions: none.** Phase 0 contains documentation only.
+**Implemented permissions: none.** Sprint 1 adds infrastructure only: the
+frontend and backend foundation, health check, logging, and error handling. No
+roles, protected resources, or authorization rules exist yet.
 
 The rows below are a planning outline. They must not be read as working
 functionality.

@@ -70,9 +70,14 @@ Use [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) for every sprint.
 
 ## Commands
 
-No application code or scripts exist during Phase 0. Once Sprint 1 creates
-`package.json` files, inspect and use the project's own scripts. Never invent
-commands or dependencies.
+Project scripts exist from Sprint 1. Inspect the root and application
+`package.json` files before running commands, and never invent scripts or
+dependencies.
+
+- Root: `npm install`, `npm run dev`, `npm run dev:backend`,
+  `npm run dev:frontend`, `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm test`.
+- Backend and frontend also expose their own workspace scripts.
 
 ## Documentation map
 

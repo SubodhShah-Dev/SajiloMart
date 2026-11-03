@@ -8,7 +8,7 @@
 | Sprint | Name | Branch | Status | Completed |
 |---|---|---|---|---|
 | 0 | Documentation and planning | `docs/phase-0` | Complete | 2026-11-03 |
-| 1 | Basic project foundation | — | Not started | — |
+| 1 | Basic project foundation | `sprint/01-basic-project-foundation` | In review | 2026-11-03 |
 | 2 | Database and public product catalog | — | Not started | — |
 | 3 | Basic customer authentication | — | Not started | — |
 | 4 | Cart | — | Not started | — |
@@ -78,3 +78,52 @@ documentation system before writing application code.
 
 **Recommended next sprint:** Sprint 1 — Basic project foundation, after owner
 approval.
+
+---
+
+### Sprint 1 — Basic project foundation
+
+| Field | Value |
+|---|---|
+| Date | 2026-11-03 |
+| Branch | `sprint/01-basic-project-foundation` |
+| Type | Application foundation |
+| Status | Implementation complete — in review |
+| Application code | Frontend and backend scaffolding |
+| Dependencies installed | React/Vite/Tailwind; Express/Winston/Morgan/Helmet/CORS; dev tooling |
+
+**Objective:** Create a runnable monorepo foundation with safe defaults, without
+adding ecommerce, authentication, or database functionality.
+
+**Completed:**
+
+- Root npm workspace with `frontend/` and `backend/` packages and shared scripts.
+- React, TypeScript, Vite, and Tailwind CSS frontend.
+- Minimal foundation page with live API status, loading, error, and retry states.
+- Express and TypeScript backend with environment validation.
+- Helmet, explicit CORS, Morgan request logging, and Winston application logging.
+- `GET /api/health`, structured 404 responses, malformed JSON handling, centralized
+  error handling, and graceful shutdown.
+- Backend Vitest + Supertest tests and ESLint configuration for both applications.
+- `.gitignore`, per-app `.env.example` files, and sprint documentation.
+
+**Verification:**
+
+- `npm run typecheck` — passed.
+- `npm run lint` — passed.
+- `npm run build` — backend and frontend passed.
+- `npm test` — 3 files, 5 tests passed.
+- Health, 404, malformed JSON, invalid environment, and production runtime checks
+  passed.
+- Browser verification passed at 1440×900 and 390×844.
+- `npm audit --omit=dev` reported 0 production vulnerabilities.
+
+**Known limitations:**
+
+- No authentication, roles, database, catalog, cart, or orders.
+- API versioning and multi-origin CORS configuration are deferred.
+- No automated frontend component tests, CI, Docker, or deployment pipeline.
+- 12 moderate dev-only npm audit advisories remain in the lint toolchain.
+
+**Recommended next sprint:** Sprint 2 — Database and public product catalog, after
+owner approval.

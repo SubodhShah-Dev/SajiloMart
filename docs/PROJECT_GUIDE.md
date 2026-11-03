@@ -1,6 +1,9 @@
 # SajiloMart — Project Guide
 
-> **Status:** Phase 0 — documentation and planning only. No application code exists yet.
+> **Status:** Sprint 1 — Basic project foundation implemented and in review. The
+> monorepo contains a runnable React/Vite frontend and Express/TypeScript backend
+> with logging, a health check, and tests. No ecommerce, authentication, or
+> database functionality exists yet.
 >
 > This document is the authoritative specification for SajiloMart. It captures the
 > project scope, architecture, development rules, and sprint workflow. Other

@@ -3,8 +3,9 @@
 This folder contains the project's documentation. It is intentionally flat and
 uses relative links so it works in both GitHub and Obsidian.
 
-> **Current phase:** Phase 0 — documentation and planning. No application code
-> exists yet.
+> **Current phase:** Sprint 1 — Basic project foundation implemented and in
+> review. The frontend and backend run locally; no ecommerce, authentication, or
+> database features exist yet.
 
 ## Reading order
 
@@ -29,6 +30,7 @@ uses relative links so it works in both GitHub and Obsidian.
 | [ROLES_AND_PERMISSIONS.md](ROLES_AND_PERMISSIONS.md) | Four roles, ownership rules, evolving permission matrix | Updated every sprint |
 | [SPRINT_ROADMAP.md](SPRINT_ROADMAP.md) | Phase and sprint sequence with milestones | Maintained by agents/developers |
 | [SPRINT_TEMPLATE.md](SPRINT_TEMPLATE.md) | Reusable sprint plan and completion report | Maintained by agents/developers |
+| [SPRINT_01_BASIC_FOUNDATION.md](SPRINT_01_BASIC_FOUNDATION.md) | Sprint 1 plan, verification, and completion report | Maintained by agents/developers |
 | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) | Completed sprint history | Updated every sprint |
 | [DECISIONS_LOG.md](DECISIONS_LOG.md) | Architecture decisions and open questions | Updated as decisions are made |
 
