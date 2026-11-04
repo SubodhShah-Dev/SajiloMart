@@ -18,5 +18,5 @@ backend/logs/*
 !.vscode/extensions.json
 
 .playwright-cli/
-
+docs/
 plans/
