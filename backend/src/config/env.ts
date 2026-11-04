@@ -35,11 +35,9 @@ function parsePort(value: string | undefined): number {
   return port;
 }
 
-function parseFrontendUrl(
-  value: string | undefined,
-  nodeEnv: NodeEnv,
-): string {
-  const fallback = nodeEnv === "production" ? undefined : "http://localhost:5173";
+function parseFrontendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
+  const fallback =
+    nodeEnv === "production" ? undefined : "http://localhost:5173";
   const rawValue = value ?? fallback;
 
   if (rawValue === undefined || rawValue === "") {
@@ -63,4 +61,6 @@ export const env = Object.freeze({
   frontendUrl: parseFrontendUrl(process.env.FRONTEND_URL, nodeEnv),
   isProduction: nodeEnv === "production",
   isTest: nodeEnv === "test",
+  accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
+  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
 });
