@@ -2,13 +2,14 @@
 
 Permanent project rules for AI agents and developers. Read this file before any
 work, then read [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md) and the
-documentation relevant to the current sprint.
+documentation relevant to the current MVP step. The `docs/` folder is local-only
+and intentionally gitignored.
 
 ## Non-negotiables
 
-- Work in small, independently reviewable sprints. Never start a new sprint
-  without explicit owner approval.
-- Keep the application functional after every sprint.
+- Work in seven focused MVP steps, one independently reviewable change set at a
+  time. Never start a new step without explicit owner approval.
+- Keep the application functional after every step.
 - Start with the minimum functionality and minimum permissions. Add permissions
   only with the feature they protect.
 - Multi-vendor marketplace support is mandatory in the final application, but do
@@ -17,6 +18,7 @@ documentation relevant to the current sprint.
   Never reset, stash, or overwrite unrelated work.
 - Never claim work or tests are complete without running the checks and observing
   the result.
+- Keep `docs/` and `plans/` local-only. Never force-add them to Git.
 
 ## Architecture
 
@@ -41,9 +43,10 @@ documentation relevant to the current sprint.
 
 ## Roles and security
 
-- Roles: `CUSTOMER`, `SELLER`, `ADMIN`, `SUPERADMIN`. Visitors are not a role.
-- Public registration creates `CUSTOMER` only. `SELLER` requires approval.
-  `ADMIN` is created by `SUPERADMIN`. `SUPERADMIN` is securely provisioned.
+- Roles: `CUSTOMER`, `SELLER`, `ADMIN`. Visitors are not a role. `SUPERADMIN` is
+  deferred and must not be created in the MVP.
+- Public registration creates `CUSTOMER` only. `SELLER` requires admin approval.
+  `ADMIN` is securely provisioned; there is no public admin registration.
 - Backend authorization is authoritative. Frontend checks are for UI only.
 - Verify ownership on every customer and seller resource.
 - JWTs live in HTTP-only cookies, never in `localStorage` or `sessionStorage`.
@@ -51,7 +54,7 @@ documentation relevant to the current sprint.
 - Never log passwords, tokens, cookies, or secrets. Never commit `.env` files.
 - Geography is reference data for addresses only. No geographic admin roles.
 
-## Sprint workflow
+## Step workflow
 
 1. **Inspect** — read docs, source, branch, and `git status`.
 2. **Plan** — report objective, scope, tasks, APIs, roles, permissions,
@@ -62,11 +65,12 @@ documentation relevant to the current sprint.
    authorization and ownership whenever permissions change.
 5. **Document** — update the implementation log, roles/permissions, ERD,
    decisions, and API/deployment docs as applicable.
-6. **Git** — work on a sprint branch, make small meaningful commits, stage only
+6. **Git** — work on a step branch, make small meaningful commits, stage only
    relevant files, never force-push or push without permission.
 7. **Review and stop** — provide the completion report and wait for approval.
 
-Use [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) for every sprint.
+Use [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) for every step. The
+seven-step sequence is in [`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md).
 
 ## Commands
 
@@ -81,20 +85,25 @@ dependencies.
 
 ## Documentation map
 
+These files exist in local working copies only; `docs/` is intentionally ignored
+by Git.
+
 | Document | Purpose |
 |---|---|
 | [`docs/README.md`](docs/README.md) | Documentation index |
 | [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md) | Authoritative specification |
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Scope and direction |
 | [`docs/ROLES_AND_PERMISSIONS.md`](docs/ROLES_AND_PERMISSIONS.md) | Roles and evolving permissions |
-| [`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md) | Sprint sequence |
-| [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) | Sprint plan/report template |
-| [`docs/IMPLEMENTATION_LOG.md`](docs/IMPLEMENTATION_LOG.md) | Completed work |
+| [`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md) | Seven-step MVP sequence |
+| [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) | Step plan/report template |
+| [`docs/implementation/README.md`](docs/implementation/README.md) | Reference-only implementation guides |
+| [`docs/IMPLEMENTATION_LOG.md`](docs/IMPLEMENTATION_LOG.md) | MVP progress |
 | [`docs/DECISIONS_LOG.md`](docs/DECISIONS_LOG.md) | Architecture decisions |
 
 ## Git
 
-- Branch per sprint: `sprint/NN-short-name` (Phase 0: `docs/phase-0`).
+- Branch per step: `step/NN-short-name` (existing work may use `sprint/NN-short-name`).
 - Commit messages: `feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`.
 - Never commit secrets, `.env` files, generated logs, or build artifacts.
+- Never commit or force-add `docs/` or `plans/`; they are local-only.
 - Never merge, push, deploy, or tag without explicit owner approval.

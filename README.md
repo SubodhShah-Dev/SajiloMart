@@ -1,42 +1,37 @@
 # SajiloMart
 
-A nationwide, multi-vendor ecommerce marketplace for Nepal, built incrementally
-from a simple product-browsing ecommerce site into a complete marketplace.
+A multi-vendor ecommerce marketplace for Nepal, scoped to a one-week MVP.
 
-> **Status:** Sprint 1 — Basic project foundation implemented and in review. The
+> **Status:** Sprint 1 — basic project foundation implemented and in review. The
 > React frontend and Express API run locally with a health check, logging, and
-> tests. Catalog, authentication, and database work begin in later sprints.
+> tests. The MVP delivery plan and implementation guides are maintained locally in
+> the gitignored `docs/` folder; Step 1 (foundation and data) is next.
 
-## Vision
+## MVP scope
 
-SajiloMart connects customers, independent sellers, and platform administrators
-across all 7 provinces and 77 districts of Nepal. The final application supports
-multiple sellers, seller-owned products and fulfillment, promotions, reviews,
-messaging, and secure role-based administration.
+SajiloMart connects customers, independent sellers, and platform administrators.
+The MVP includes:
 
-The initial application stays intentionally simple: public catalog, customer
-accounts, cart, Cash-on-Delivery checkout, and basic administration. Each sprint
-adds one coherent, reviewable increment while keeping the application working.
+- Public catalog, search, categories, and product detail.
+- Email/password and Google authentication.
+- Authenticated cart, wishlist, reviews, and buyer–seller chat.
+- Multi-vendor checkout with Cash on Delivery and Stripe Checkout Sandbox.
+- Seller onboarding, product management, and order fulfillment.
+- Admin seller approval, product moderation, and review moderation.
+
+Roles are `CUSTOMER`, `SELLER`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
+scope for the MVP: payouts, returns/refunds, coupons, flash sales, email
+verification, password reset, file uploads, product variants, WebSockets,
+multi-currency, and production deployment.
 
 ## Documentation
 
-Start with the [documentation index](docs/README.md) or jump to a specific
-document:
+Project documentation is maintained locally under `docs/` and is intentionally
+not tracked by Git. In a working checkout, start with `docs/README.md`.
 
-| Document | Purpose |
-|---|---|
-| [Project Guide](docs/PROJECT_GUIDE.md) | Authoritative specification and development rules |
-| [Project Overview](docs/PROJECT_OVERVIEW.md) | Initial scope, final scope, and direction |
-| [BRD](docs/BRD.md) | Business requirements template (owner to complete) |
-| [SRS](docs/SRS.md) | Software requirements template (owner to complete) |
-| [Use Cases](docs/USE_CASES.md) | Actors and use-case template (owner to complete) |
-| [ERD](docs/ERD.md) | Conceptual data model outline |
-| [Roles and Permissions](docs/ROLES_AND_PERMISSIONS.md) | Roles and incremental permission policy |
-| [Sprint Roadmap](docs/SPRINT_ROADMAP.md) | Sprint sequence and milestones |
-| [Sprint Template](docs/SPRINT_TEMPLATE.md) | Reusable sprint plan and report |
-| [Sprint 1 Report](docs/SPRINT_01_BASIC_FOUNDATION.md) | Foundation plan, verification, and completion report |
-| [Implementation Log](docs/IMPLEMENTATION_LOG.md) | Completed work |
-| [Decisions Log](docs/DECISIONS_LOG.md) | Architecture decisions and open questions |
+The local docs cover the project guide, MVP scope, BRD/SRS/use cases, ERD, roles
+and permissions, the seven-step plan, implementation log, decisions, and
+reference-only implementation guides.
 
 Agent and developer rules are in [`AGENTS.md`](AGENTS.md).
 
@@ -80,11 +75,11 @@ Real `.env` files are never committed. Application logs are written to
 ## Development workflow
 
 1. Inspect the repository and docs.
-2. Plan the sprint scope.
+2. Plan the step scope.
 3. Implement end-to-end.
 4. Test what was built.
 5. Update documentation.
-6. Commit on the sprint branch.
+6. Commit on the step branch.
 7. Review, report, and stop for approval.
 
 Never commit secrets or `.env` files. Never push or merge without explicit owner
