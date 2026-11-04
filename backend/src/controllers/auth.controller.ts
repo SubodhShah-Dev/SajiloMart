@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { logger } from "../config/logger.js";
+import bcrypt from "bcrypt";
 
 export function login(_req: Request, res: Response) {
   res.send("Hello Login");

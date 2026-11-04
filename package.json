@@ -21,6 +21,7 @@
     "start:backend": "npm run start -w backend"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "concurrently": "^10.0.6"
   }
 }

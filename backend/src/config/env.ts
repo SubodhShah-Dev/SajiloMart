@@ -61,6 +61,8 @@ export const env = Object.freeze({
   frontendUrl: parseFrontendUrl(process.env.FRONTEND_URL, nodeEnv),
   isProduction: nodeEnv === "production",
   isTest: nodeEnv === "test",
-  accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
-  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
+  jwtAccessTokenSecret: process.env.JWT_ACCESS_TOKEN_SECRET,
+  jwtRefreshTokenSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
+  jwtAccessTokenExpiry: process.env.JWT_ACCESS_TOKEN_EXPIRY,
+  jwtRefreshTokenExpiry: process.env.JWT_REFRESH_TOKEN_EXPIRY,
 });
