@@ -4,8 +4,8 @@ A multi-vendor ecommerce marketplace for Nepal, scoped to a one-week MVP.
 
 > **Status:** Sprint 1 — basic project foundation implemented and in review. The
 > React frontend and Express API run locally with a health check, logging, and
-> tests. The MVP delivery plan and implementation guides are maintained locally in
-> the gitignored `docs/` folder; Step 1 (foundation and data) is next.
+> tests. Project docs are tracked in `docs/`, except local-only guides under
+> `docs/implementation/`; Step 1 (foundation and data) is next.
 
 ## MVP scope
 
@@ -26,12 +26,14 @@ multi-currency, and production deployment.
 
 ## Documentation
 
-Project documentation is maintained locally under `docs/` and is intentionally
-not tracked by Git. In a working checkout, start with `docs/README.md`.
+Project documentation is tracked under `docs/`. Reference-only implementation
+guides in `docs/implementation/` are local-only and intentionally gitignored.
+Start with [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md).
 
-The local docs cover the project guide, MVP scope, BRD/SRS/use cases, ERD, roles
-and permissions, the seven-step plan, implementation log, decisions, and
-reference-only implementation guides.
+The docs cover the project guide, MVP scope, BRD/SRS/use cases, ERD, roles and
+permissions, the seven-step plan, implementation log, decisions, and
+reference-only implementation guides. Supporting docs that have not been
+restored yet may be absent; use the project guide as the fallback.
 
 Agent and developer rules are in [`AGENTS.md`](AGENTS.md).
 

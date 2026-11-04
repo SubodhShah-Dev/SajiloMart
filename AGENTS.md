@@ -2,8 +2,8 @@
 
 Permanent project rules for AI agents and developers. Read this file before any
 work, then read [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md) and the
-documentation relevant to the current MVP step. The `docs/` folder is local-only
-and intentionally gitignored.
+documentation relevant to the current MVP step. Tracked documentation lives in
+`docs/`; `docs/implementation/` is local-only and intentionally gitignored.
 
 ## Non-negotiables
 
@@ -18,7 +18,8 @@ and intentionally gitignored.
   Never reset, stash, or overwrite unrelated work.
 - Never claim work or tests are complete without running the checks and observing
   the result.
-- Keep `docs/` and `plans/` local-only. Never force-add them to Git.
+- Keep `docs/implementation/` and `plans/` local-only. Never force-add them to
+  Git.
 
 ## Architecture
 
@@ -69,8 +70,10 @@ and intentionally gitignored.
    relevant files, never force-push or push without permission.
 7. **Review and stop** — provide the completion report and wait for approval.
 
-Use [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) for every step. The
-seven-step sequence is in [`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md).
+Use [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) for every step when it
+is present. The seven-step sequence is in
+[`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md) and
+[`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md) when available.
 
 ## Commands
 
@@ -85,8 +88,9 @@ dependencies.
 
 ## Documentation map
 
-These files exist in local working copies only; `docs/` is intentionally ignored
-by Git.
+Tracked project docs live under `docs/`. `docs/implementation/` is local-only and
+intentionally ignored by Git. If a supporting local-only doc is absent, use
+`docs/PROJECT_GUIDE.md` and `README.md` and continue.
 
 | Document | Purpose |
 |---|---|
@@ -96,7 +100,7 @@ by Git.
 | [`docs/ROLES_AND_PERMISSIONS.md`](docs/ROLES_AND_PERMISSIONS.md) | Roles and evolving permissions |
 | [`docs/SPRINT_ROADMAP.md`](docs/SPRINT_ROADMAP.md) | Seven-step MVP sequence |
 | [`docs/SPRINT_TEMPLATE.md`](docs/SPRINT_TEMPLATE.md) | Step plan/report template |
-| [`docs/implementation/README.md`](docs/implementation/README.md) | Reference-only implementation guides |
+| [`docs/implementation/README.md`](docs/implementation/README.md) | Reference-only implementation guides (local-only) |
 | [`docs/IMPLEMENTATION_LOG.md`](docs/IMPLEMENTATION_LOG.md) | MVP progress |
 | [`docs/DECISIONS_LOG.md`](docs/DECISIONS_LOG.md) | Architecture decisions |
 
@@ -105,5 +109,6 @@ by Git.
 - Branch per step: `step/NN-short-name` (existing work may use `sprint/NN-short-name`).
 - Commit messages: `feat:`, `fix:`, `chore:`, `test:`, `docs:`, `refactor:`.
 - Never commit secrets, `.env` files, generated logs, or build artifacts.
-- Never commit or force-add `docs/` or `plans/`; they are local-only.
+- Never commit or force-add `docs/implementation/` or `plans/`; they are
+  local-only.
 - Never merge, push, deploy, or tag without explicit owner approval.
