@@ -20,3 +20,4 @@ backend/logs/*
 .playwright-cli/
 docs/
 plans/
+certs/

@@ -1,8 +1,8 @@
-import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
+import path from "node:path";
 
 dotenv.config({
-  path: fileURLToPath(new URL("../../.env", import.meta.url)),
+  path: path.resolve(import.meta.dirname, "../../.env"),
 });
 
 type NodeEnv = "development" | "test" | "production";
@@ -35,6 +35,38 @@ function parsePort(value: string | undefined): number {
   return port;
 }
 
+function parseDbPort(value: string | undefined): number {
+  const port = Number(value ?? "3306");
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(
+      `Invalid DB_PORT "${value ?? ""}". Expected an integer between 1 and 65535.`,
+    );
+  }
+
+  return port;
+}
+
+function parseBoolean(
+  value: string | undefined,
+  fallback: boolean,
+  name: string,
+): boolean {
+  if (value === undefined || value === "") {
+    return fallback;
+  }
+
+  if (value === "true") {
+    return true;
+  }
+
+  if (value === "false") {
+    return false;
+  }
+
+  throw new Error(`Invalid ${name} "${value}". Expected "true" or "false".`);
+}
+
 function parseFrontendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
   const fallback =
     nodeEnv === "production" ? undefined : "http://localhost:5173";
@@ -65,4 +97,11 @@ export const env = Object.freeze({
   jwtRefreshTokenSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
   jwtAccessTokenExpiry: process.env.JWT_ACCESS_TOKEN_EXPIRY,
   jwtRefreshTokenExpiry: process.env.JWT_REFRESH_TOKEN_EXPIRY,
+  dbHost: process.env.DB_HOST,
+  dbPort: parseDbPort(process.env.DB_PORT),
+  dbUsername: process.env.DB_USERNAME,
+  dbPassword: process.env.DB_PASSWORD,
+  dbDatabase: process.env.DB_DATABASE,
+  dbSsl: parseBoolean(process.env.DB_SSL, true, "DB_SSL"),
+  dbSslCaPath: process.env.DB_SSL_CA_PATH,
 });
