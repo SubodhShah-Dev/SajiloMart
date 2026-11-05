@@ -27,7 +27,7 @@ export class User {
     enum: ["CUSTOMER", "ADMIN", "VENDOR"],
     default: "CUSTOMER",
   })
-  role!: "customer" | "admin" | "vendor";
+  role!: "CUSTOMER" | "ADMIN" | "VENDOR";
 
   @Column({
     type: "enum",
