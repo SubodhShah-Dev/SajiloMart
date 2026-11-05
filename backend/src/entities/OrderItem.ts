@@ -7,12 +7,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Check,
+  Unique,
 } from "typeorm";
 import { Order } from "./Order.js";
 import { Product } from "./Product.js";
 
 @Entity("order_items")
+@Unique(["orderId", "productId"])
 @Check("CHK_order_items_quantity_positive", "quantity > 0")
+@Check("CHK_order_items_unit_price_non_negative", "unit_price_at_purchase >= 0")
+@Check("CHK_order_items_line_total_non_negative", "line_total >= 0")
 export class OrderItem {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

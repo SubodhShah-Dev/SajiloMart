@@ -15,9 +15,22 @@ import { User } from "./User.js";
 import { OrderItem } from "./OrderItem.js";
 import { Payment } from "./Payment.js";
 
+export interface ShippingAddressSnapshot {
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  district: string;
+  province: string;
+}
+
 @Entity("orders")
 @Index("IDX_order_user_id", ["userId", "createdAt"])
 @Index("IDX_order_status", ["status"])
+@Check("CHK_order_subtotal_non_negative", "subtotal >= 0")
+@Check("CHK_order_shipping_fee_non_negative", "shipping_fee >= 0")
+@Check("CHK_order_total_non_negative", "total >= 0")
 export class Order {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -36,7 +49,9 @@ export class Order {
   })
   status!: "PENDING" | "CONFIRMED" | "PARTIAL" | "FULFILLED" | "CANCELLED";
 
-  @OneToOne(() => Payment, (payment) => payment.order, { cascade: true })
+  @OneToOne(() => Payment, (payment) => payment.order, {
+    cascade: ["insert", "update"],
+  })
   payment!: Payment;
 
   @Column({ name: "payment_method", type: "enum", enum: ["COD", "STRIPE"] })
@@ -66,7 +81,7 @@ export class Order {
   total!: string;
 
   @Column({ type: "json", name: "shipping_address" })
-  shippingAddress!: Record<string, unknown>;
+  shippingAddress!: ShippingAddressSnapshot;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items!: OrderItem[];

@@ -9,6 +9,7 @@ import {
 import { Order } from "./Order.js";
 import { WishlistItem } from "./WishlistItem.js";
 import { Review } from "./Review.js";
+import { Address } from "./Address.js";
 
 @Entity("users")
 export class User {
@@ -40,6 +41,9 @@ export class User {
 
   @Column({ type: "varchar", length: 20, nullable: true })
   phone?: string;
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses!: Address[];
 
   @OneToMany(() => Order, (order) => order.user)
   orders!: Order[];
