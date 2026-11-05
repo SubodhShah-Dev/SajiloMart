@@ -23,7 +23,7 @@ The MVP includes:
 - Seller onboarding, product management, and order fulfillment.
 - Admin seller approval, product moderation, and review moderation.
 
-Roles are `CUSTOMER`, `SELLER`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
+Roles are `CUSTOMER`, `VENDOR`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
 scope for the MVP: payouts, returns/refunds, coupons, flash sales, email
 verification, password reset, file uploads, product variants, WebSockets,
 multi-currency, and production deployment.
@@ -74,7 +74,7 @@ multi-currency, and production deployment.
 ## 6. Roles and security
 
 - Public registration creates `CUSTOMER` only.
-- `SELLER` requires admin approval; `ADMIN` is securely provisioned.
+- `VENDOR` requires admin approval; `ADMIN` is securely provisioned.
 - There is no public admin registration.
 - Backend authorization is authoritative. Frontend checks are for UI only.
 - Verify ownership on every customer and seller resource.

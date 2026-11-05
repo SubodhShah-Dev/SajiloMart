@@ -24,10 +24,10 @@ export class User {
 
   @Column({
     type: "enum",
-    enum: ["CUSTOMER", "ADMIN", "VENDOR"],
+    enum: ["CUSTOMER", "VENDOR", "ADMIN"],
     default: "CUSTOMER",
   })
-  role!: "CUSTOMER" | "ADMIN" | "VENDOR";
+  role!: "CUSTOMER" | "VENDOR" | "ADMIN";
 
   @Column({
     type: "enum",

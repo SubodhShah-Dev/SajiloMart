@@ -19,7 +19,7 @@ The MVP includes:
 - Seller onboarding, product management, and order fulfillment.
 - Admin seller approval, product moderation, and review moderation.
 
-Roles are `CUSTOMER`, `SELLER`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
+Roles are `CUSTOMER`, `VENDOR`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
 scope for the MVP: payouts, returns/refunds, coupons, flash sales, email
 verification, password reset, file uploads, product variants, WebSockets,
 multi-currency, and production deployment.
