@@ -6,7 +6,9 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from "typeorm";
-import { Order } from "./order.entity.js";
+import { Order } from "./Order.js";
+import { WishlistItem } from "./WishlistItem.js";
+import { Review } from "./Review.js";
 
 @Entity("users")
 export class User {
@@ -34,13 +36,27 @@ export class User {
     enum: ["ACTIVE", "INACTIVE", "SUSPENDED"],
     default: "ACTIVE",
   })
-  status!: string;
+  status!: "ACTIVE" | "INACTIVE" | "SUSPENDED";
 
   @Column({ type: "varchar", length: 20, nullable: true })
   phone?: string;
 
   @OneToMany(() => Order, (order) => order.user)
   orders!: Order[];
+
+  @OneToMany(() => WishlistItem, (wishlistItem) => wishlistItem.user)
+  wishlistItems!: WishlistItem[];
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews!: Review[];
+
+  @Column({
+    name: "profile_image_url",
+    type: "varchar",
+    length: 500,
+    nullable: true,
+  })
+  profileImageUrl?: string;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

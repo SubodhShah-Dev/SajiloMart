@@ -7,16 +7,22 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
+  Index,
+  Check,
 } from "typeorm";
-import { User } from "./user.entity.js";
-import { OrderItem } from "./order-item.entity.js";
+import { User } from "./User.js";
+import { OrderItem } from "./OrderItem.js";
+import { Payment } from "./Payment.js";
 
 @Entity("orders")
+@Index("IDX_order_user_id", ["userId", "createdAt"])
+@Index("IDX_order_status", ["status"])
 export class Order {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "user_id", type: "char", length: 36 })
+  @Column({ name: "user_id", type: "varchar", length: 36 })
   userId!: string;
 
   @ManyToOne(() => User, (user) => user.orders, { onDelete: "RESTRICT" })
@@ -28,7 +34,10 @@ export class Order {
     enum: ["PENDING", "CONFIRMED", "PARTIAL", "FULFILLED", "CANCELLED"],
     default: "PENDING",
   })
-  status!: string;
+  status!: "PENDING" | "CONFIRMED" | "PARTIAL" | "FULFILLED" | "CANCELLED";
+
+  @OneToOne(() => Payment, (payment) => payment.order, { cascade: true })
+  payment!: Payment;
 
   @Column({ name: "payment_method", type: "enum", enum: ["COD", "STRIPE"] })
   paymentMethod!: "COD" | "STRIPE";
@@ -36,10 +45,10 @@ export class Order {
   @Column({
     name: "payment_status",
     type: "enum",
-    enum: ["UNPAID", "PENDING", "PAID", "FAILED"],
-    default: "UNPAID",
+    enum: ["PENDING", "COMPLETED", "FAILED", "REFUNDED"],
+    default: "PENDING",
   })
-  paymentStatus!: string;
+  paymentStatus!: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
 
   @Column({ type: "decimal", precision: 12, scale: 2 })
   subtotal!: string;

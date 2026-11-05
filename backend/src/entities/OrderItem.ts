@@ -6,23 +6,25 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Check,
 } from "typeorm";
-import { Order } from "./order.entity.js";
-import { Product } from "./product.entity.js";
+import { Order } from "./Order.js";
+import { Product } from "./Product.js";
 
 @Entity("order_items")
+@Check("CHK_order_items_quantity_positive", "quantity > 0")
 export class OrderItem {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "order_id", type: "char", length: 36 })
+  @Column({ name: "order_id", type: "varchar", length: 36 })
   orderId!: string;
 
   @ManyToOne(() => Order, (order) => order.items, { onDelete: "CASCADE" })
   @JoinColumn({ name: "order_id" })
   order!: Order;
 
-  @Column({ name: "product_id", type: "char", length: 36 })
+  @Column({ name: "product_id", type: "varchar", length: 36 })
   productId!: string;
 
   @ManyToOne(() => Product, (product) => product.orderItems, {
@@ -31,7 +33,7 @@ export class OrderItem {
   @JoinColumn({ name: "product_id" })
   product!: Product;
 
-  @Column({ type: "int" })
+  @Column({ type: "int", unsigned: true })
   quantity!: number;
 
   @Column({
@@ -41,6 +43,20 @@ export class OrderItem {
     scale: 2,
   })
   unitPriceAtPurchase!: string;
+
+  @Column({ name: "product_name", type: "varchar", length: 255 })
+  productName!: string;
+
+  @Column({
+    name: "product_image_url",
+    type: "varchar",
+    length: 500,
+    nullable: true,
+  })
+  productImageUrl?: string;
+
+  @Column({ name: "line_total", type: "decimal", precision: 12, scale: 2 })
+  lineTotal!: string;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

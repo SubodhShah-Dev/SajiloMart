@@ -8,15 +8,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { User } from "./user.entity.js";
-import { CartItem } from "./cart-item.entity.js";
+import { User } from "./User.js";
+import { CartItem } from "./CartItem.js";
 
 @Entity("carts")
 export class Cart {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "user_id", type: "char", length: 36, unique: true })
+  @Column({ name: "user_id", type: "varchar", length: 36 })
   userId!: string;
 
   @OneToOne(() => User, { onDelete: "CASCADE" })

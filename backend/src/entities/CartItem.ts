@@ -7,31 +7,33 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Unique,
+  Check,
 } from "typeorm";
-import { Cart } from "./cart.entity.js";
-import { Product } from "./product.entity.js";
+import { Cart } from "./Cart.js";
+import { Product } from "./Product.js";
 
 @Entity("cart_items")
-@Unique(["cartId", "productId"]) // Ensures a product only appears once per cart row (quantity is updated instead)
+@Check("CHK_cart_item_quantity", "quantity > 0")
+@Unique(["cartId", "productId"])
 export class CartItem {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "cart_id", type: "char", length: 36 })
+  @Column({ name: "cart_id", type: "varchar", length: 36 })
   cartId!: string;
 
   @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: "CASCADE" })
   @JoinColumn({ name: "cart_id" })
   cart!: Cart;
 
-  @Column({ name: "product_id", type: "char", length: 36 })
+  @Column({ name: "product_id", type: "varchar", length: 36 })
   productId!: string;
 
   @ManyToOne(() => Product, { onDelete: "CASCADE" })
   @JoinColumn({ name: "product_id" })
   product!: Product;
 
-  @Column({ type: "int" })
+  @Column({ type: "int", unsigned: true })
   quantity!: number;
 
   @CreateDateColumn({ name: "created_at" })

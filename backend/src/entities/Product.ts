@@ -6,11 +6,15 @@ import {
   UpdateDateColumn,
   OneToOne,
   OneToMany,
+  Index,
 } from "typeorm";
-import { Inventory } from "./inventory.entity.js";
-import { OrderItem } from "./order-item.entity.js";
+import { Inventory } from "./Inventory.js";
+import { OrderItem } from "./OrderItem.js";
+import { WishlistItem } from "./WishlistItem.js";
+import { Review } from "./Review.js";
 
 @Entity("products")
+@Index(["category", "isActive"])
 export class Product {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -38,6 +42,23 @@ export class Product {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
   orderItems!: OrderItem[];
+
+  @OneToMany(() => WishlistItem, (wishlistItem) => wishlistItem.product)
+  wishlistItems!: WishlistItem[];
+
+  @OneToMany(() => Review, (review) => review.product)
+  reviews!: Review[];
+
+  @Column({ name: "image_url", type: "varchar", length: 500, nullable: true })
+  imageUrl?: string;
+
+  @Column({
+    name: "thumbnail_url",
+    type: "varchar",
+    length: 500,
+    nullable: true,
+  })
+  thumbnailUrl?: string;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
