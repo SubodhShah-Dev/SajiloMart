@@ -11,7 +11,8 @@ const products: Record<string, any>[] = [
 ];
 
 for (const product of products) {
-  product.id = count + 1;
+  product.id = String(count + 1);
+  count++;
 }
 
 export default products;

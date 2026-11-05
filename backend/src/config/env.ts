@@ -101,7 +101,7 @@ export const env = Object.freeze({
   dbPort: parseDbPort(process.env.DB_PORT),
   dbUsername: process.env.DB_USERNAME,
   dbPassword: process.env.DB_PASSWORD,
-  dbDatabase: process.env.DB_DATABASE,
+  dbName: process.env.DB_DATABASE,
   dbSsl: parseBoolean(process.env.DB_SSL, true, "DB_SSL"),
   dbSslCaPath: process.env.DB_SSL_CA_PATH,
 });

@@ -11,7 +11,8 @@ const users: Record<string, any>[] = [
 ];
 
 for (const user of users) {
-  user.id = count + 1;
+  user.id = String(count + 1);
+  count++;
 }
 
 export default users;
