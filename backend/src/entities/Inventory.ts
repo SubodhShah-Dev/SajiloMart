@@ -7,10 +7,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Check,
+  Unique,
 } from "typeorm";
 import { Product } from "./Product.js";
 
 @Entity("inventory")
+@Unique(["productId"])
 @Check("CHK_inventory_stock_valid", "reserved_stock <= total_stock")
 export class Inventory {
   @PrimaryGeneratedColumn("uuid")

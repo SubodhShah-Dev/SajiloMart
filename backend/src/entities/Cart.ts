@@ -7,11 +7,13 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Unique,
 } from "typeorm";
 import { User } from "./User.js";
 import { CartItem } from "./CartItem.js";
 
 @Entity("carts")
+@Unique(["userId"])
 export class Cart {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

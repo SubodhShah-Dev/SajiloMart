@@ -7,6 +7,7 @@ import {
   OneToOne,
   OneToMany,
   Index,
+  Check,
 } from "typeorm";
 import { Inventory } from "./Inventory.js";
 import { OrderItem } from "./OrderItem.js";
@@ -15,6 +16,7 @@ import { Review } from "./Review.js";
 
 @Entity("products")
 @Index(["category", "isActive"])
+@Check("CHK_product_price_non_negative", "price >= 0")
 export class Product {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

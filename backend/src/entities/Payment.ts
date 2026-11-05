@@ -7,11 +7,15 @@ import {
   UpdateDateColumn,
   OneToOne,
   Index,
+  Check,
+  Unique,
 } from "typeorm";
 import { Order } from "./Order.js";
 
 @Entity("payments")
+@Unique(["orderId"])
 @Index(["status"])
+@Check("CHK_payment_amount_non_negative", "amount >= 0")
 export class Payment {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -54,10 +58,10 @@ export class Payment {
     nullable: true,
     unique: true,
   })
-  transactionId?: string; // Reference ID returned by the payment provider (e.g., Stripe PaymentIntent ID)
+  transactionId?: string;
 
   @Column({ name: "gateway_response", type: "text", nullable: true })
-  gatewayResponse?: string; // Raw JSON string of the webhook payload for auditing
+  gatewayResponse?: string;
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
