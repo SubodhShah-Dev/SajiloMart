@@ -44,9 +44,9 @@ documentation relevant to the current MVP step. Tracked documentation lives in
 
 ## Roles and security
 
-- Roles: `CUSTOMER`, `SELLER`, `ADMIN`. Visitors are not a role. `SUPERADMIN` is
+- Roles: `CUSTOMER`, `VENDOR`, `ADMIN`. Visitors are not a role. `SUPERADMIN` is
   deferred and must not be created in the MVP.
-- Public registration creates `CUSTOMER` only. `SELLER` requires admin approval.
+- Public registration creates `CUSTOMER` only. `VENDOR` requires admin approval.
   `ADMIN` is securely provisioned; there is no public admin registration.
 - Backend authorization is authoritative. Frontend checks are for UI only.
 - Verify ownership on every customer and seller resource.
