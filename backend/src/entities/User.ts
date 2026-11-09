@@ -5,6 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
+  BeforeUpdate,
 } from "typeorm";
 import { Order } from "./Order.js";
 import { WishlistItem } from "./WishlistItem.js";
@@ -12,9 +14,16 @@ import { Review } from "./Review.js";
 import { Address } from "./Address.js";
 
 @Entity("users")
+@Index("IDX_user_is_removed", ["isRemoved"])
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
+
+  @Column({ name: "first_name", type: "varchar", length: 50 })
+  firstName!: string;
+
+  @Column({ name: "last_name", type: "varchar", length: 50 })
+  lastName!: string;
 
   @Column({ name: "user_name", type: "varchar", length: 100 })
   userName!: string;
@@ -39,6 +48,12 @@ export class User {
   })
   status!: "ACTIVE" | "INACTIVE" | "SUSPENDED";
 
+  @Column({ name: "is_removed", type: "boolean", default: false })
+  isRemoved!: boolean;
+
+  @Column({ name: "deleted_at", type: "datetime", precision: 6, nullable: true })
+  deletedAt!: Date | null;
+
   @Column({ type: "varchar", length: 20, nullable: true })
   phone?: string;
 
@@ -61,6 +76,15 @@ export class User {
     nullable: true,
   })
   profileImageUrl?: string;
+
+  @BeforeUpdate()
+  setDeletedAt(): void {
+    if (this.isRemoved && this.deletedAt === null) {
+      this.deletedAt = new Date();
+    } else if (!this.isRemoved) {
+      this.deletedAt = null;
+    }
+  }
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

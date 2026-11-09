@@ -10,6 +10,7 @@ import {
   OneToOne,
   Index,
   Check,
+  BeforeUpdate,
 } from "typeorm";
 import { User } from "./User.js";
 import { OrderItem } from "./OrderItem.js";
@@ -28,6 +29,8 @@ export interface ShippingAddressSnapshot {
 @Entity("orders")
 @Index("IDX_order_user_id", ["userId", "createdAt"])
 @Index("IDX_order_status", ["status"])
+@Index("IDX_order_is_removed", ["isRemoved"])
+@Index("IDX_order_user_id_is_removed", ["userId", "isRemoved"])
 @Check("CHK_order_subtotal_non_negative", "subtotal >= 0")
 @Check("CHK_order_shipping_fee_non_negative", "shipping_fee >= 0")
 @Check("CHK_order_total_non_negative", "total >= 0")
@@ -86,9 +89,24 @@ export class Order {
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items!: OrderItem[];
 
+  @Column({ name: "is_removed", type: "boolean", default: false })
+  isRemoved!: boolean;
+
+  @Column({ name: "deleted_at", type: "datetime", precision: 6, nullable: true })
+  deletedAt!: Date | null;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @BeforeUpdate()
+  setDeletedAt(): void {
+    if (this.isRemoved && this.deletedAt === null) {
+      this.deletedAt = new Date();
+    } else if (!this.isRemoved) {
+      this.deletedAt = null;
+    }
+  }
 }
