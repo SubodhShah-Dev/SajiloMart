@@ -1,37 +1,44 @@
-import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
-import { logger } from "../config/logger.js";
+import type { NextFunction, Request, Response } from "express";
 
-export function authenticateToken(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  const headerAuthorization = req.headers.authorization;
-  if (!headerAuthorization || !headerAuthorization.startsWith("Bearer ")) {
-    logger.error("Unauthorized: No authorization header or invalid format");
-    res.status(401).send("Unauthorized");
-    return;
+import { AppError } from "../errors/AppError.js";
+import { getUserById } from "../services/auth.service.js";
+import { ACCESS_COOKIE_NAME } from "../services/cookies.service.js";
+import { verifyAccessToken } from "../services/token.service.js";
+
+function readAccessToken(request: Request): string | undefined {
+  const cookieToken = request.cookies?.[ACCESS_COOKIE_NAME] as unknown;
+
+  if (typeof cookieToken === "string" && cookieToken.length > 0) {
+    return cookieToken;
   }
-  const token = headerAuthorization.substring(7);
+
+  const authorization = request.headers.authorization;
+
+  if (authorization?.startsWith("Bearer ")) {
+    return authorization.slice("Bearer ".length);
+  }
+
+  return undefined;
+}
+
+export async function authenticateToken(
+  request: Request,
+  _response: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
-    const decoded = jwt.verify(token, env.accessTokenSecret ?? ("" as string));
-    if (!(decoded instanceof Object && "userId" in decoded)) {
-      logger.error("Unauthorized: Invalid token");
-      res.status(401).send("Unauthorized");
-      return;
+    const token = readAccessToken(request);
+
+    if (!token) {
+      throw new AppError("Authentication required", 401);
     }
-    const userId = decoded.userId;
-    if (!userId) {
-      logger.error("Unauthorized: Invalid token");
-      res.status(401).send("Unauthorized");
-      return;
-    }
-    (req as Request & { userId: string }).userId = userId;
+
+    const payload = verifyAccessToken(token);
+    const user = await getUserById(payload.sub);
+
+    request.auth = { userId: user.id, role: user.role };
     next();
   } catch (error) {
-    console.error(error);
     next(error);
   }
 }

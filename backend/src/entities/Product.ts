@@ -4,18 +4,23 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
+  ManyToOne,
   OneToMany,
+  OneToOne,
+  JoinColumn,
   Index,
   Check,
+  BeforeUpdate,
 } from "typeorm";
+import { Store } from "./Store.js";
 import { Inventory } from "./Inventory.js";
 import { OrderItem } from "./OrderItem.js";
 import { WishlistItem } from "./WishlistItem.js";
 import { Review } from "./Review.js";
 
 @Entity("products")
-@Index(["category", "isActive"])
+@Index(["category", "isRemoved"])
+@Index("IDX_product_is_removed", ["isRemoved"])
 @Check("CHK_product_price_non_negative", "price >= 0")
 export class Product {
   @PrimaryGeneratedColumn("uuid")
@@ -36,8 +41,18 @@ export class Product {
   @Column({ type: "varchar", length: 100 })
   category!: string;
 
-  @Column({ name: "is_active", type: "boolean", default: true })
-  isActive!: boolean;
+  @Column({ name: "store_id", type: "varchar", length: 36 })
+  storeId!: string;
+
+  @ManyToOne(() => Store, (store) => store.products)
+  @JoinColumn({ name: "store_id" })
+  store!: Store;
+
+  @Column({ name: "is_removed", type: "boolean", default: false })
+  isRemoved!: boolean;
+
+  @Column({ name: "deleted_at", type: "datetime", precision: 6, nullable: true })
+  deletedAt!: Date | null;
 
   @OneToOne(() => Inventory, (inventory) => inventory.product)
   inventory!: Inventory;
@@ -67,4 +82,13 @@ export class Product {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @BeforeUpdate()
+  setDeletedAt(): void {
+    if (this.isRemoved && this.deletedAt === null) {
+      this.deletedAt = new Date();
+    } else if (!this.isRemoved) {
+      this.deletedAt = null;
+    }
+  }
 }

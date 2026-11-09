@@ -46,6 +46,7 @@ export const AppDataSource = new DataSource({
   database: requireDbEnv(env.dbName, "DB_NAME"),
   ssl: buildSslOptions(),
   synchronize: false,
+  migrationsRun: false,
   logging: env.nodeEnv === "development" ? ["error", "warn"] : ["error"],
   entities: [entitiesPath],
   migrations: [migrationsPath],

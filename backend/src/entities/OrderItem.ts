@@ -8,6 +8,8 @@ import {
   UpdateDateColumn,
   Check,
   Unique,
+  Index,
+  BeforeUpdate,
 } from "typeorm";
 import { Order } from "./Order.js";
 import { Product } from "./Product.js";
@@ -17,6 +19,8 @@ import { Product } from "./Product.js";
 @Check("CHK_order_items_quantity_positive", "quantity > 0")
 @Check("CHK_order_items_unit_price_non_negative", "unit_price_at_purchase >= 0")
 @Check("CHK_order_items_line_total_non_negative", "line_total >= 0")
+@Index("IDX_order_item_is_removed", ["isRemoved"])
+@Index("IDX_order_item_order_id_is_removed", ["orderId", "isRemoved"])
 export class OrderItem {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -62,9 +66,24 @@ export class OrderItem {
   @Column({ name: "line_total", type: "decimal", precision: 12, scale: 2 })
   lineTotal!: string;
 
+  @Column({ name: "is_removed", type: "boolean", default: false })
+  isRemoved!: boolean;
+
+  @Column({ name: "deleted_at", type: "datetime", precision: 6, nullable: true })
+  deletedAt!: Date | null;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @BeforeUpdate()
+  setDeletedAt(): void {
+    if (this.isRemoved && this.deletedAt === null) {
+      this.deletedAt = new Date();
+    } else if (!this.isRemoved) {
+      this.deletedAt = null;
+    }
+  }
 }
