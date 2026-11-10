@@ -15,6 +15,7 @@ import {
   toSafeUser,
   updateUserProfile,
 } from "../services/auth.service.js";
+import { generateUniqueUsername } from "../utils/username.util.js";
 import {
   clearAuthCookies,
   clearGoogleStateCookie,
@@ -50,22 +51,23 @@ function sendUser(response: Response, user: User, statusCode = 200): void {
   });
 }
 
-export async function register(request: Request, response: Response): Promise<void> {
-  const input = request.body as RegisterInput;
-  const user = await registerUser(input);
+async function handlePostAuth(user: User, response: Response, statusCode = 200): Promise<void> {
   const tokens = await createSession(AppDataSource.manager, user);
 
   setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
-  sendUser(response, user, 201);
+  sendUser(response, user, statusCode);
+}
+
+export async function register(request: Request, response: Response): Promise<void> {
+  const input = request.body as RegisterInput;
+  const user = await registerUser(input);
+  await handlePostAuth(user, response, 201);
 }
 
 export async function login(request: Request, response: Response): Promise<void> {
   const input = request.body as LoginInput;
   const user = await loginUser(input);
-  const tokens = await createSession(AppDataSource.manager, user);
-
-  setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
-  sendUser(response, user);
+  await handlePostAuth(user, response);
 }
 
 export async function refresh(request: Request, response: Response): Promise<void> {
@@ -259,10 +261,15 @@ export async function googleCallback(
       const lastName =
         googleUser.family_name ?? parts.slice(1).join(" ");
 
+      const username = await generateUniqueUsername(
+        { firstName: firstName.slice(0, 50), lastName: lastName.slice(0, 50), email },
+        AppDataSource.manager,
+      );
+
       user = userRepository.create({
         firstName: firstName.slice(0, 50),
         lastName: lastName.slice(0, 50),
-        userName: email.split("@")[0]?.slice(0, 100) || "google-user",
+        userName: username,
         email,
         passwordHash: "",
         role: "CUSTOMER",
@@ -293,4 +300,32 @@ export async function googleCallback(
   } catch {
     response.redirect(googleRedirect("google_oauth_failed"));
   }
+}
+
+export async function checkUsernameAvailable(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const username = request.query.username as string | undefined;
+
+  if (!username || typeof username !== "string") {
+    throw new AppError("Username is required", 400);
+  }
+
+  const trimmed = username.trim().toLowerCase();
+
+  if (!/^[a-z][a-z0-9_]{2,29}$/.test(trimmed)) {
+    throw new AppError("Invalid username format", 400);
+  }
+
+  const userRepository = AppDataSource.getRepository(User);
+  const existing = await userRepository.findOne({
+    where: { userName: trimmed },
+    select: { id: true },
+  });
+
+  response.status(200).json({
+    success: true,
+    data: { available: !existing, username: trimmed },
+  });
 }

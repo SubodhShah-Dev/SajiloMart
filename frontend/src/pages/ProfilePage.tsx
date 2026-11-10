@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle, Loader2, Check, Store, ExternalLink, ArrowRight, Shield, TrendingUp } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Badge } from "../components/ui";
+import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
 import { setCredentials } from "../store/slices/authSlice";
-import { updateCurrentUser } from "../services/api";
+import { updateCurrentUser, checkUsernameAvailable } from "../services/api";
+
+type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
 export const ProfilePage = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -16,9 +19,53 @@ export const ProfilePage = () => {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone ?? "",
+    username: user?.username || "",
   });
   const [avatar, setAvatar] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
+  const checkUsername = useCallback(async (username: string) => {
+    if (!user) return;
+    if (!username || username === user.username) {
+      setUsernameStatus("idle");
+      setUsernameError(null);
+      return;
+    }
+
+    if (!/^[a-z][a-z0-9_]{2,29}$/.test(username)) {
+      setUsernameStatus("idle");
+      setUsernameError("Username must start with a letter and contain only lowercase letters, numbers, and underscores (3-30 characters)");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    setUsernameError(null);
+
+    try {
+      const result = await checkUsernameAvailable(username);
+      if (result.available) {
+        setUsernameStatus("available");
+      } else {
+        setUsernameStatus("taken");
+        setUsernameError("That username is taken");
+      }
+    } catch {
+      setUsernameStatus("idle");
+      setUsernameError("Unable to check availability");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !isEditing) return;
+
+    const timer = setTimeout(() => {
+      checkUsername(formData.username);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [user, formData.username, isEditing, checkUsername]);
 
   if (!user) {
     return (
@@ -36,6 +83,7 @@ export const ProfilePage = () => {
       const updatedUser = await updateCurrentUser({
         name: formData.name,
         phone: formData.phone,
+        username: formData.username,
       });
 
       dispatch(setCredentials(updatedUser));
@@ -43,6 +91,7 @@ export const ProfilePage = () => {
         ...current,
         name: updatedUser.name,
         phone: updatedUser.phone ?? "",
+        username: updatedUser.username,
       }));
       setIsEditing(false);
       setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -62,8 +111,11 @@ export const ProfilePage = () => {
       name: user.name,
       email: user.email,
       phone: user.phone ?? "",
+      username: user.username || "",
     });
     setIsEditing(false);
+    setUsernameStatus("idle");
+    setUsernameError(null);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +181,7 @@ export const ProfilePage = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-text-primary">{user?.name || "User"}</h2>
+                    <p className="text-sm text-text-secondary">@{user?.username || "user"}</p>
                     <p className="text-sm text-text-secondary">{user?.email || ""}</p>
                     <Badge variant={user?.role === "VENDOR" ? "primary" : user?.role === "ADMIN" ? "secondary" : "default"} size="sm" className="mt-2">
                       {user?.role || "CUSTOMER"}
@@ -208,6 +261,31 @@ export const ProfilePage = () => {
                   placeholder="+1 (555) 000-0000"
                 />
 
+                <Input
+                  label="Username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
+                  disabled={!isEditing}
+                  leftIcon={<User className="h-5 w-5" aria-hidden="true" />}
+                  placeholder="Enter username"
+                  rightIcon={
+                    usernameStatus === "checking" ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+                    ) : usernameStatus === "available" ? (
+                      <Check className="h-5 w-5 text-success" aria-hidden="true" />
+                    ) : usernameStatus === "taken" ? (
+                      <AlertCircle className="h-5 w-5 text-accent" aria-hidden="true" />
+                    ) : null
+                  }
+                  error={usernameError ?? undefined}
+                  hint={
+                    usernameStatus === "available" ? "Available" :
+                    usernameStatus === "taken" ? (usernameError ?? "That username is taken") :
+                    usernameStatus === "checking" ? "Checking..." :
+                    "Username must start with a letter, 3-30 chars, lowercase/numbers/underscores only"
+                  }
+                />
+
                 <div className="pt-4 border-t border-border">
                   <h3 className="text-lg font-medium text-text-primary mb-4">Account Information</h3>
                   <div className="grid gap-4 sm:grid-cols-2 text-sm">
@@ -232,6 +310,101 @@ export const ProfilePage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {user?.role === "VENDOR" || user?.role === "ADMIN" ? (
+            <div className="lg:col-span-3 mt-8">
+              <Card variant="outlined">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Selling on SajiloMart</CardTitle>
+                  <NavLink to="/seller">
+                    <Button variant="primary" size="sm" leftIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}>
+                      Go to Dashboard
+                    </Button>
+                  </NavLink>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-text-secondary">Manage your store, products, and track your sales performance.</p>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">0</p>
+                      <p className="text-sm text-text-secondary">Active Products</p>
+                    </Card>
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">$0.00</p>
+                      <p className="text-sm text-text-secondary">Total Revenue</p>
+                    </Card>
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">0</p>
+                      <p className="text-sm text-text-secondary">Orders This Month</p>
+                    </Card>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <NavLink to="/seller">
+                      <Button variant="primary" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                        Open Seller Dashboard
+                      </Button>
+                    </NavLink>
+                    <NavLink to={`/products/${user.username || "store"}`}>
+                      <Button variant="outline" leftIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}>
+                        View Storefront
+                      </Button>
+                    </NavLink>
+                    <NavLink to="/sell">
+                      <Button variant="outline" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                        Edit Store Profile
+                      </Button>
+                    </NavLink>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="lg:col-span-3 mt-8">
+              <Card variant="outlined">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Start Selling on SajiloMart</CardTitle>
+                  <NavLink to="/sell">
+                    <Button variant="primary" size="sm" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                      Create Your Store
+                    </Button>
+                  </NavLink>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-text-secondary">Turn your passion into profit. Join thousands of sellers on our marketplace.</p>
+                  <div className="grid gap-4 md:grid-cols-3 text-center">
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <Shield className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Secure Platform</p>
+                      <p className="text-sm text-text-secondary">Protected payments and seller protection</p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <TrendingUp className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Global Reach</p>
+                      <p className="text-sm text-text-secondary">Access to millions of customers</p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <Store className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Easy Setup</p>
+                      <p className="text-sm text-text-secondary">Start selling in minutes</p>
+                    </div>
+                  </div>
+                  <div className="text-center pt-4">
+                    <NavLink to="/sell">
+                      <Button variant="primary" size="lg" leftIcon={<Store className="h-5 w-5" aria-hidden="true" />}>
+                        Start Selling Now
+                      </Button>
+                    </NavLink>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>

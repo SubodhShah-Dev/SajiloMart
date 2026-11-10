@@ -20,7 +20,8 @@
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/data-source.ts",
     "migration:show": "npm run typeorm -- migration:show -d src/config/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/Migration -d src/config/data-source.ts",
-        "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "create:admin": "tsx src/scripts/create-admin.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

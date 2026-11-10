@@ -1,3 +1,4 @@
+import { useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Users,
@@ -11,15 +12,22 @@ import {
   Eye,
   Edit,
   Flag,
-  CheckCircle,
   XCircle,
   Clock,
   Download,
   ArrowRight,
+  Search,
+  MoreVertical,
+  ShieldCheck,
+  ShieldAlert,
+  Ban,
+  UserCheck,
 } from "lucide-react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Badge, type BadgeProps } from "../components/ui";
-import { useSelector } from "react-redux";
+import { Button, Card, CardContent, CardHeader, CardTitle, Badge, type BadgeProps, Input, Select } from "../components/ui";
+import { useSelector as useSelectorRedux } from "react-redux";
+import { useState } from "react";
 import type { RootState } from "../store";
+import { adminSuspendStore, adminUnsuspendStore, adminVerifyStore, adminRejectStore, getAdminStores, type AdminStoreSummary } from "../services/api";
 
 interface AdminUser {
   id: string;
@@ -31,47 +39,12 @@ interface AdminUser {
   orders: number;
 }
 
-interface VendorApplication {
-  id: string;
-  businessName: string;
-  ownerName: string;
-  email: string;
-  category: string;
-  submitted: string;
-  status: "pending" | "approved" | "rejected";
-}
-
-interface AdminProduct {
-  id: string;
-  name: string;
-  vendor: string;
-  category: string;
-  price: number;
-  status: "active" | "pending_review" | "flagged" | "removed";
-  reports: number;
-}
-
 const mockUsers: AdminUser[] = [
   { id: "1", name: "John Doe", email: "john@example.com", role: "CUSTOMER", status: "active", joined: "2024-01-15", orders: 12 },
   { id: "2", name: "Jane Smith", email: "jane@example.com", role: "CUSTOMER", status: "active", joined: "2024-01-10", orders: 8 },
   { id: "3", name: "Bob Wilson", email: "bob@example.com", role: "VENDOR", status: "active", joined: "2023-12-20", orders: 0 },
   { id: "4", name: "Alice Brown", email: "alice@example.com", role: "CUSTOMER", status: "suspended", joined: "2024-01-05", orders: 3 },
   { id: "5", name: "Charlie Davis", email: "charlie@example.com", role: "VENDOR", status: "pending", joined: "2024-01-18", orders: 0 },
-];
-
-const mockVendorApplications: VendorApplication[] = [
-  { id: "VA-001", businessName: "TechGadgets Pro", ownerName: "Mike Johnson", email: "mike@techgadgets.com", category: "Electronics", submitted: "2024-01-18", status: "pending" },
-  { id: "VA-002", businessName: "Fashion Forward", ownerName: "Sarah Williams", email: "sarah@fashionforward.com", category: "Fashion", submitted: "2024-01-17", status: "pending" },
-  { id: "VA-003", businessName: "Home Essentials Co", ownerName: "David Lee", email: "david@homeessentials.com", category: "Home & Kitchen", submitted: "2024-01-16", status: "approved" },
-  { id: "VA-004", businessName: "Beauty Bliss", ownerName: "Emma Wilson", email: "emma@beautybliss.com", category: "Beauty", submitted: "2024-01-15", status: "rejected" },
-];
-
-const mockAdminProducts: AdminProduct[] = [
-  { id: "1", name: "Wireless Headphones", vendor: "TechGadgets Pro", category: "Electronics", price: 299.99, status: "active", reports: 0 },
-  { id: "2", name: "Smart Watch", vendor: "TechGadgets Pro", category: "Electronics", price: 399.99, status: "active", reports: 2 },
-  { id: "3", name: "Designer Dress", vendor: "Fashion Forward", category: "Fashion", price: 89.99, status: "pending_review", reports: 0 },
-  { id: "4", name: "Counterfeit Item", vendor: "Unknown Vendor", category: "Electronics", price: 19.99, status: "flagged", reports: 15 },
-  { id: "5", name: "Removed Product", vendor: "Previous Vendor", category: "Home", price: 49.99, status: "removed", reports: 8 },
 ];
 
 const getUserRoleBadge = (role: AdminUser["role"]) => {
@@ -94,30 +67,172 @@ const getUserStatusBadge = (status: AdminUser["status"]) => {
   return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
 };
 
-const getApplicationStatusBadge = (status: VendorApplication["status"]) => {
-  const config: Record<VendorApplication["status"], { variant: BadgeProps["variant"]; label: string; icon: React.ReactNode }> = {
-    pending: { variant: "warning", label: "Pending", icon: <Clock className="h-3 w-3" aria-hidden="true" /> },
-    approved: { variant: "success", label: "Approved", icon: <CheckCircle className="h-3 w-3" aria-hidden="true" /> },
-    rejected: { variant: "danger", label: "Rejected", icon: <XCircle className="h-3 w-3" aria-hidden="true" /> },
-  };
-  const c = config[status];
-  return <Badge variant={c.variant} size="sm" className="gap-1">{c.icon}{c.label}</Badge>;
-};
-
-const getProductStatusBadge = (status: AdminProduct["status"]) => {
-  const config: Record<AdminProduct["status"], { variant: BadgeProps["variant"]; label: string }> = {
-    active: { variant: "success", label: "Active" },
-    pending_review: { variant: "warning", label: "Pending Review" },
-    flagged: { variant: "danger", label: "Flagged" },
-    removed: { variant: "default", label: "Removed" },
+const getStoreStatusBadge = (status: AdminStoreSummary["status"]) => {
+  const config: Record<AdminStoreSummary["status"], { variant: BadgeProps["variant"]; label: string }> = {
+    PENDING: { variant: "warning", label: "Pending" },
+    APPROVED: { variant: "success", label: "Approved" },
+    SUSPENDED: { variant: "danger", label: "Suspended" },
   };
   const c = config[status];
   return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
 };
 
+const getVerificationStatusBadge = (status: AdminStoreSummary["verificationStatus"]) => {
+  const config: Record<AdminStoreSummary["verificationStatus"], { variant: BadgeProps["variant"]; label: string; icon: React.ReactNode }> = {
+    UNVERIFIED: { variant: "danger", label: "Unverified", icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" /> },
+    PENDING: { variant: "warning", label: "Pending", icon: <Clock className="h-3 w-3" aria-hidden="true" /> },
+    VERIFIED: { variant: "success", label: "Verified", icon: <ShieldCheck className="h-3 w-3" aria-hidden="true" /> },
+    REJECTED: { variant: "default", label: "Rejected", icon: <XCircle className="h-3 w-3" aria-hidden="true" /> },
+  };
+  const c = config[status];
+  return <Badge variant={c.variant} size="sm" className="gap-1">{c.icon}{c.label}</Badge>;
+};
+
 export const AdminPage = () => {
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const userRole = useSelector((state: RootState) => state.auth.user?.role ?? null);
+  const isAuthenticated = useSelectorRedux((state: RootState) => state.auth.isAuthenticated);
+  const userRole = useSelectorRedux((state: RootState) => state.auth.user?.role ?? null);
+
+  const [stores, setStores] = useState<AdminStoreSummary[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [verificationFilter, setVerificationFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+
+  // Load stores
+  const loadStores = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getAdminStores({
+        page,
+        limit,
+        status: statusFilter || undefined,
+        verificationStatus: verificationFilter || undefined,
+        search: search || undefined,
+      });
+      setStores(result.stores);
+      setTotal(result.total);
+    } catch (error) {
+      console.error("Failed to fetch stores:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, statusFilter, verificationFilter, search]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadStores();
+  }, [loadStores]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActionMenuOpen(null);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Check admin role
+  if (!isAuthenticated || userRole !== "ADMIN") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Access Denied</h1>
+          <p className="text-text-secondary mb-6">You don't have permission to access the admin dashboard.</p>
+          <NavLink to="/">
+            <Button variant="primary">Go Home</Button>
+          </NavLink>
+        </div>
+      </div>
+    );
+  }
+
+  const handleActionClick = (storeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActionMenuOpen(actionMenuOpen === storeId ? null : storeId);
+  };
+
+  const handleVerify = async (storeId: string) => {
+    const limit = prompt("Enter listing limit (leave empty for unlimited):");
+    if (limit === null) return; // User cancelled
+
+    const listingLimit = limit ? parseInt(limit, 10) : null;
+    if (limit && isNaN(listingLimit as number)) {
+      alert("Please enter a valid number");
+      return;
+    }
+
+    setActionLoading(storeId);
+    try {
+      await adminVerifyStore(storeId, { listingLimit });
+      loadStores();
+    } catch (error) {
+      console.error("Failed to verify store:", error);
+      alert(error instanceof Error ? error.message : "Failed to verify store");
+    } finally {
+      setActionLoading(null);
+      setActionMenuOpen(null);
+    }
+  };
+
+  const handleReject = async (storeId: string) => {
+    const reason = prompt("Enter reason for rejection (10-500 characters):");
+    if (!reason || reason.length < 10 || reason.length > 500) {
+      alert("Reason must be between 10 and 500 characters");
+      return;
+    }
+
+    setActionLoading(storeId);
+    try {
+      await adminRejectStore(storeId, { reason });
+      loadStores();
+    } catch (error) {
+      console.error("Failed to reject store:", error);
+      alert(error instanceof Error ? error.message : "Failed to reject store");
+    } finally {
+      setActionLoading(null);
+      setActionMenuOpen(null);
+    }
+  };
+
+  const handleSuspend = async (storeId: string) => {
+    const reason = prompt("Enter suspension reason (10-500 characters):");
+    if (!reason || reason.length < 10 || reason.length > 500) {
+      alert("Reason must be between 10 and 500 characters");
+      return;
+    }
+
+    setActionLoading(storeId);
+    try {
+      await adminSuspendStore(storeId, { reason });
+      loadStores();
+    } catch (error) {
+      console.error("Failed to suspend store:", error);
+      alert(error instanceof Error ? error.message : "Failed to suspend store");
+    } finally {
+      setActionLoading(null);
+      setActionMenuOpen(null);
+    }
+  };
+
+  const handleUnsuspend = async (storeId: string) => {
+    if (!confirm("Are you sure you want to unsuspend this store?")) return;
+
+    setActionLoading(storeId);
+    try {
+      await adminUnsuspendStore(storeId);
+      loadStores();
+    } catch (error) {
+      console.error("Failed to unsuspend store:", error);
+      alert(error instanceof Error ? error.message : "Failed to unsuspend store");
+    } finally {
+      setActionLoading(null);
+      setActionMenuOpen(null);
+    }
+  };
 
   // Check admin role
   if (!isAuthenticated || userRole !== "ADMIN") {
@@ -142,8 +257,100 @@ export const AdminPage = () => {
     { label: "Revenue (Month)", value: "$245,670", change: "+22%", icon: DollarSign },
   ];
 
-  const pendingApplications = mockVendorApplications.filter((a) => a.status === "pending").length;
-  const flaggedProducts = mockAdminProducts.filter((p) => p.status === "flagged").length;
+  const storeRows = stores.length === 0 ? (
+    <tr>
+      <td colSpan={9} className="p-8 text-center text-text-secondary">No stores found</td>
+    </tr>
+  ) : (
+    stores.map((store: AdminStoreSummary) => (
+      <tr key={store.id} className="hover:bg-surface-hover">
+        <td className="p-4">
+          <div className="font-medium text-text-primary">{store.name}</div>
+          <div className="text-sm text-text-secondary">{store.slug}</div>
+        </td>
+        <td className="p-4">
+          <div className="font-medium text-text-primary">{store.owner.name}</div>
+          <div className="text-sm text-text-secondary">@{store.owner.username} • {store.owner.email}</div>
+        </td>
+        <td className="p-4 text-sm text-text-secondary">{store.category ?? "N/A"}</td>
+        <td className="p-4 text-sm text-text-secondary">{store.productCount}</td>
+        <td className="p-4">{getStoreStatusBadge(store.status)}</td>
+        <td className="p-4">{getVerificationStatusBadge(store.verificationStatus)}</td>
+        <td className="p-4 text-sm text-text-secondary">
+          {store.listingLimit !== null ? store.listingLimit : "Unlimited"}
+        </td>
+        <td className="p-4 text-sm text-text-secondary">
+          {new Date(store.createdAt).toLocaleDateString()}
+        </td>
+        <td className="p-4">
+          <div className="relative inline-block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={(e) => handleActionClick(store.id, e)}
+              disabled={actionLoading === store.id}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+            {actionMenuOpen === store.id && (
+              <div className="absolute right-0 top-full mt-1 z-10 w-56 bg-surface border border-border rounded-lg shadow-lg py-1">
+                {store.verificationStatus === "UNVERIFIED" || store.verificationStatus === "PENDING" || store.verificationStatus === "REJECTED" ? (
+                  <>
+                    <button
+                      onClick={() => { handleVerify(store.id); setActionMenuOpen(null); }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-success hover:bg-success/5"
+                      disabled={actionLoading === store.id}
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Verify
+                    </button>
+                    <button
+                      onClick={() => { handleReject(store.id); setActionMenuOpen(null); }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-accent hover:bg-accent/5"
+                      disabled={actionLoading === store.id}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Reject Verification
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => { handleSuspend(store.id); setActionMenuOpen(null); }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-accent hover:bg-accent/5"
+                      disabled={actionLoading === store.id}
+                    >
+                      <Ban className="h-4 w-4" />
+                      Suspend
+                    </button>
+                    {store.status === "SUSPENDED" && (
+                      <button
+                        onClick={() => { handleUnsuspend(store.id); setActionMenuOpen(null); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-success hover:bg-success/5"
+                        disabled={actionLoading === store.id}
+                      >
+                        <UserCheck className="h-4 w-4" />
+                        Unsuspend
+                      </button>
+                    )}
+                  </>
+                )}
+                <NavLink
+                  to={`/products/${store.slug}`}
+                  onClick={() => setActionMenuOpen(null)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Storefront
+                </NavLink>
+              </div>
+            )}
+          </div>
+        </td>
+      </tr>
+    ))
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +358,7 @@ export const AdminPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">Admin Dashboard</h1>
-            <p className="text-text-secondary">Manage users, vendors, products, and platform settings</p>
+            <p className="text-text-secondary">Manage users, sellers, products, and platform settings</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" leftIcon={<Download className="h-4 w-4" aria-hidden="true" />}>Export Report</Button>
@@ -225,49 +432,112 @@ export const AdminPage = () => {
 
           <Card variant="outlined">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Vendor Applications</CardTitle>
-              <Badge variant={pendingApplications > 0 ? "warning" : "success"} size="sm">{pendingApplications} Pending</Badge>
+              <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Sellers</CardTitle>
+              <Badge variant="warning" size="sm">{stores.filter((s: AdminStoreSummary) => s.verificationStatus === "PENDING").length} Pending Verification</Badge>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left p-4 font-medium text-text-secondary">Business</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Owner</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Category</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Submitted</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Status</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {mockVendorApplications.map((app) => (
-                      <tr key={app.id} className="hover:bg-surface-hover">
-                        <td className="p-4">
-                          <div className="font-medium text-text-primary">{app.businessName}</div>
-                          <div className="text-sm text-text-secondary">{app.email}</div>
-                        </td>
-                        <td className="p-4 text-sm text-text-secondary">{app.ownerName}</td>
-                        <td className="p-4 text-sm text-text-secondary">{app.category}</td>
-                        <td className="p-4 text-sm text-text-secondary">{app.submitted}</td>
-                        <td className="p-4">{getApplicationStatusBadge(app.status)}</td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            {app.status === "pending" && (
-                              <>
-                                <Button variant="ghost" size="sm" leftIcon={<CheckCircle className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0 text-success hover:bg-success/10" aria-label="Approve" />
-                                <Button variant="ghost" size="sm" leftIcon={<XCircle className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0 text-accent hover:bg-accent/10" aria-label="Reject" />
-                              </>
-                            )}
-                            <Button variant="ghost" size="sm" leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0" aria-label="View details" />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    placeholder="Search by name, email, username..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
+                    className="w-full sm:w-64"
+                  />
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                    options={[
+                      { value: "", label: "All Status" },
+                      { value: "APPROVED", label: "Approved" },
+                      { value: "SUSPENDED", label: "Suspended" },
+                      { value: "PENDING", label: "Pending" },
+                    ]}
+                    className="w-full sm:w-40"
+                  />
+                  <Select
+                    value={verificationFilter}
+                    onChange={(e) => { setVerificationFilter(e.target.value); setPage(1); }}
+                    options={[
+                      { value: "", label: "All Verification" },
+                      { value: "UNVERIFIED", label: "Unverified" },
+                      { value: "PENDING", label: "Pending" },
+                      { value: "VERIFIED", label: "Verified" },
+                      { value: "REJECTED", label: "Rejected" },
+                    ]}
+                    className="w-full sm:w-48"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={String(limit)}
+                    onChange={(e) => { setLimit(parseInt(e.target.value, 10)); setPage(1); }}
+                    options={[
+                      { value: "10", label: "10 per page" },
+                      { value: "20", label: "20 per page" },
+                      { value: "50", label: "50 per page" },
+                      { value: "100", label: "100 per page" },
+                    ]}
+                    className="w-36"
+                  />
+                </div>
               </div>
+
+              {loading ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-4 font-medium text-text-secondary">Store</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Owner</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Category</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Products</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Status</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Verification</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Listing Limit</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Created</th>
+                          <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {storeRows}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {total > limit && (
+                    <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <span className="text-sm text-text-secondary">
+                        Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} stores
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                          disabled={page === 1 || loading}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p: number) => Math.min(Math.ceil(total / limit), p + 1))}
+                          disabled={page === Math.ceil(total / limit) || loading}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -276,54 +546,13 @@ export const AdminPage = () => {
           <Card variant="outlined">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" aria-hidden="true" /> Product Moderation</CardTitle>
-              <Badge variant={flaggedProducts > 0 ? "danger" : "success"} size="sm">{flaggedProducts} Flagged</Badge>
+              <Badge variant="danger" size="sm">0 Flagged</Badge>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left p-4 font-medium text-text-secondary">Product</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Vendor</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Category</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Price</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Status</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Reports</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {mockAdminProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-surface-hover">
-                        <td className="p-4">
-                          <div className="font-medium text-text-primary">{product.name}</div>
-                        </td>
-                        <td className="p-4 text-sm text-text-secondary">{product.vendor}</td>
-                        <td className="p-4 text-sm text-text-secondary">{product.category}</td>
-                        <td className="p-4 font-medium text-text-primary">${product.price.toFixed(2)}</td>
-                        <td className="p-4">{getProductStatusBadge(product.status)}</td>
-                        <td className="p-4">
-                          {product.reports > 0 ? (
-                            <Badge variant="danger" size="sm" dot>{product.reports}</Badge>
-                          ) : (
-                            <span className="text-text-muted">-</span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0" aria-label="View product" />
-                            {product.status === "flagged" && (
-                              <>
-                                <Button variant="ghost" size="sm" leftIcon={<CheckCircle className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0 text-success hover:bg-success/10" aria-label="Approve" />
-                                <Button variant="ghost" size="sm" leftIcon={<XCircle className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0 text-accent hover:bg-accent/10" aria-label="Remove" />
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-8 text-center">
+                <Shield className="h-12 w-12 text-text-muted mx-auto mb-4" />
+                <p className="text-text-secondary mb-4">Product moderation coming soon</p>
+                <Badge variant="default" size="sm">Coming soon</Badge>
               </div>
             </CardContent>
           </Card>
@@ -338,9 +567,9 @@ export const AdminPage = () => {
                 <span className="text-text-primary">Manage All Users</span>
                 <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
               </NavLink>
-              <NavLink to="/admin/vendors" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
+              <NavLink to="/admin/sellers" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
                 <Store className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Vendor Management</span>
+                <span className="text-text-primary">Seller Management</span>
                 <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
               </NavLink>
               <NavLink to="/admin/products" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">

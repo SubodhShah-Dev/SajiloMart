@@ -48,6 +48,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   name: string;
+  username: string;
   email: string;
   role: AuthUserRole;
   phone: string | null;
@@ -68,6 +69,7 @@ export interface RegisterInput {
 export interface UpdateProfileInput {
   name?: string;
   phone?: string;
+  username?: string;
 }
 
 interface ApiSuccess<T> {
@@ -248,6 +250,121 @@ export async function updateCurrentUser(
   return data.user;
 }
 
+export interface UsernameAvailableResponse {
+  available: boolean;
+  username: string;
+}
+
+export async function checkUsernameAvailable(
+  username: string,
+): Promise<UsernameAvailableResponse> {
+  return apiRequest<UsernameAvailableResponse>(
+    `/api/auth/username-available?username=${encodeURIComponent(username)}`,
+  );
+}
+
+export interface CartItemResponse {
+  id: string;
+  productId: string;
+  quantity: number;
+  product: Product;
+}
+
+export interface CartResponse {
+  id: string;
+  items: CartItemResponse[];
+  subtotal: number;
+  itemCount: number;
+}
+
+export interface AddCartItemInput {
+  productId: string;
+  quantity?: number;
+}
+
+export interface UpdateCartQtyInput {
+  quantity: number;
+}
+
+export interface AnonymousCartItem {
+  productId: string;
+  quantity: number;
+}
+
+export async function getCart(): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart");
+}
+
+export async function addCartItem(input: AddCartItemInput): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateCartQty(
+  productId: string,
+  input: UpdateCartQtyInput,
+): Promise<CartResponse> {
+  return apiRequest<CartResponse>(`/api/cart/${encodeURIComponent(productId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function removeCartItem(productId: string): Promise<CartResponse> {
+  return apiRequest<CartResponse>(`/api/cart/${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function clearCart(): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart", {
+    method: "DELETE",
+  });
+}
+
+export async function mergeAnonymousCart(
+  items: AnonymousCartItem[],
+): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart/merge", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
+
+export interface WishlistResponse {
+  items: Product[];
+}
+
+export async function getWishlist(): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist");
+}
+
+export async function addWishlistItem(
+  productId: string,
+): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist", {
+    method: "POST",
+    body: JSON.stringify({ productId }),
+  });
+}
+
+export async function removeWishlistItem(
+  productId: string,
+): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>(
+    `/api/wishlist/${encodeURIComponent(productId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function clearWishlist(): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist", {
+    method: "DELETE",
+  });
+}
+
 export interface VendorProduct extends Product {
   totalStock: number;
   reservedStock: number;
@@ -326,5 +443,166 @@ export async function deleteProduct(
   await apiRequest<{ message: string }>(`/api/seller/products/${encodeURIComponent(id)}`, {
     method: "DELETE",
     signal,
+  });
+}
+
+export interface StoreSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  category: string | null;
+  phone: string | null;
+  status: "PENDING" | "APPROVED" | "SUSPENDED";
+  verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  listingLimit: number | null;
+  productCount: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  verificationRequestedAt: string | null;
+  suspensionReason: string | null;
+  returnPolicy: string | null;
+  shippingPolicy: string | null;
+}
+
+export interface StoreSummaryResponse {
+  store: StoreSummary | null;
+}
+
+export interface CreateStoreInput {
+  name: string;
+  description: string;
+  category: string;
+  phone?: string;
+  returnPolicy?: string;
+  shippingPolicy?: string;
+  logoUrl?: string;
+}
+
+export interface UpdateStoreInput {
+  name?: string;
+  description?: string;
+  category?: string;
+  phone?: string;
+  returnPolicy?: string;
+  shippingPolicy?: string;
+  logoUrl?: string;
+}
+
+export interface AdminStoreSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  category: string | null;
+  phone: string | null;
+  status: "PENDING" | "APPROVED" | "SUSPENDED";
+  verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  listingLimit: number | null;
+  productCount: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  suspensionReason: string | null;
+  owner: {
+    name: string;
+    username: string;
+    email: string;
+  };
+}
+
+export interface AdminStoresResponse {
+  stores: AdminStoreSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminVerifyStoreInput {
+  listingLimit?: number | null;
+}
+
+export interface AdminRejectStoreInput {
+  reason: string;
+}
+
+export interface AdminSuspendStoreInput {
+  reason: string;
+}
+
+export async function getMyStore(): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store");
+}
+
+export async function createStore(input: CreateStoreInput): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateStore(input: UpdateStoreInput): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function requestVerification(): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store/verification", {
+    method: "POST",
+  });
+}
+
+export async function getAdminStores(
+  filters: { page?: number; limit?: number; status?: string; verificationStatus?: string; search?: string } = {},
+): Promise<AdminStoresResponse> {
+  const params = new URLSearchParams();
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.status) params.set("status", filters.status);
+  if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+  if (filters.search) params.set("search", filters.search);
+
+  return apiRequest<AdminStoresResponse>(`/api/admin/stores?${params.toString()}`);
+}
+
+export async function adminSuspendStore(
+  storeId: string,
+  input: AdminSuspendStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/suspend`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function adminUnsuspendStore(
+  storeId: string,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/unsuspend`, {
+    method: "POST",
+  });
+}
+
+export async function adminVerifyStore(
+  storeId: string,
+  input: AdminVerifyStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/verify`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function adminRejectStore(
+  storeId: string,
+  input: AdminRejectStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/reject-verification`, {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }

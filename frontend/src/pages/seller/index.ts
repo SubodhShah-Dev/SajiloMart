@@ -1,1 +1,2 @@
-export { StoreOnboardingPage } from "./StoreOnboardingPage";
+export { SellPage } from "./SellPage";
+export { SellerPage } from "../Seller";

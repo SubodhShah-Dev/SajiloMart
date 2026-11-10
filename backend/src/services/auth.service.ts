@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { EntityManager } from "typeorm";
-import { QueryFailedError } from "typeorm";
 
 import { AppDataSource } from "../config/data-source.js";
 import { RefreshSession } from "../entities/RefreshSession.js";
@@ -13,6 +12,7 @@ import type {
 } from "../validation/auth.schema.js";
 import { bcryptCompare, bcryptHash, sha256Hash } from "../utils/hash.util.js";
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from "./token.service.js";
+import { generateUniqueUsername, isDuplicateKeyError } from "../utils/username.util.js";
 import type { UserRole } from "../types/user.js";
 
 const sessionRepository = AppDataSource.getRepository(RefreshSession);
@@ -23,6 +23,7 @@ export interface SafeUser {
   firstName: string;
   lastName: string;
   name: string;
+  username: string;
   email: string;
   role: UserRole;
   phone: string | null;
@@ -37,6 +38,7 @@ export function toSafeUser(user: User): SafeUser {
     firstName: user.firstName,
     lastName: user.lastName,
     name: fullName || user.userName,
+    username: user.userName,
     email: user.email,
     role: user.role,
     phone: user.phone ?? null,
@@ -65,25 +67,12 @@ export async function createSession(
   return { accessToken, refreshToken: refreshToken.token };
 }
 
-function isDuplicateKeyError(error: unknown): boolean {
-  return (
-    error instanceof QueryFailedError &&
-    (error.driverError as { code?: string } | undefined)?.code === "ER_DUP_ENTRY"
-  );
-}
-
 function splitName(name: string): { firstName: string; lastName: string } {
   const parts = name.trim().replace(/\s+/g, " ").split(" ");
   const firstName = parts[0] ?? "User";
   const lastName = parts.slice(1).join(" ");
 
   return { firstName, lastName };
-}
-
-function usernameFromEmail(email: string): string {
-  const base = email.split("@")[0]?.replace(/[^a-zA-Z0-9._-]/g, "") || "user";
-
-  return base.slice(0, 90);
 }
 
 export async function registerUser(input: RegisterInput): Promise<User> {
@@ -101,10 +90,12 @@ export async function registerUser(input: RegisterInput): Promise<User> {
   const { firstName, lastName } = splitName(input.name);
   const passwordHash = await bcryptHash(input.password);
 
+  const username = await generateUniqueUsername({ firstName, lastName, email });
+
   const user = userRepository.create({
     firstName,
     lastName,
-    userName: usernameFromEmail(email),
+    userName: username,
     email,
     passwordHash,
     role: "CUSTOMER",
@@ -115,7 +106,10 @@ export async function registerUser(input: RegisterInput): Promise<User> {
     return await userRepository.save(user);
   } catch (error) {
     if (isDuplicateKeyError(error)) {
-      throw new AppError("An account with this email already exists", 409);
+      // Retry once with a new username
+      const retryUsername = await generateUniqueUsername({ firstName, lastName, email });
+      user.userName = retryUsername;
+      return await userRepository.save(user);
     }
 
     throw error;
@@ -244,6 +238,33 @@ export async function updateUserProfile(
 
   if (input.phone !== undefined) {
     user.phone = input.phone.trim() === "" ? undefined : input.phone.trim();
+  }
+
+  if (input.username !== undefined) {
+    const trimmed = input.username.trim().toLowerCase();
+
+    if (trimmed !== user.userName) {
+      const existing = await userRepository.findOne({
+        where: { userName: trimmed },
+        select: { id: true },
+      });
+
+      if (existing) {
+        throw new AppError("That username is taken", 409);
+      }
+
+      user.userName = trimmed;
+
+      try {
+        return await userRepository.save(user);
+      } catch (error) {
+        if (isDuplicateKeyError(error)) {
+          throw new AppError("That username is taken", 409);
+        }
+
+        throw error;
+      }
+    }
   }
 
   return userRepository.save(user);

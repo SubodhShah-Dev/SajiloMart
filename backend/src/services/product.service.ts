@@ -106,7 +106,10 @@ export async function getProducts(
   const queryBuilder = productRepository
     .createQueryBuilder("product")
     .leftJoinAndSelect("product.inventory", "inventory")
-    .where("product.isRemoved = :isRemoved", { isRemoved: false });
+    .leftJoin("product.store", "store")
+    .where("product.isRemoved = :isRemoved", { isRemoved: false })
+    .andWhere("store.isRemoved = :storeRemoved", { storeRemoved: false })
+    .andWhere("store.status = :storeStatus", { storeStatus: "APPROVED" });
 
   if (category) {
     queryBuilder.andWhere("product.category = :category", { category });
@@ -181,10 +184,14 @@ export async function getProductById(
 ): Promise<ProductResponse | null> {
   const product = await productRepository.findOne({
     where: { id, isRemoved: false },
-    relations: { inventory: true },
+    relations: { inventory: true, store: true },
   });
 
-  if (!product) {
+  if (!product || !product.store) {
+    return null;
+  }
+
+  if (product.store.isRemoved || product.store.status !== "APPROVED") {
     return null;
   }
 
