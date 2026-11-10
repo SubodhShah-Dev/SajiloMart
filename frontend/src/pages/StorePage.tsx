@@ -4,9 +4,10 @@ import { Button, Badge } from "../components/ui";
 import { ProductCard } from "../components/product/ProductCard";
 import type { Category } from "../data/mockData";
 import { mockCategories } from "../data/mockData";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../store";
-import { selectWishlistIds, toggleWishlist } from "../store/slices/wishlistSlice";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
+import { selectWishlistIds } from "../store/slices/wishlistSlice";
+import { useWishlistToggle } from "../hooks/useWishlistToggle";
 import { getProducts, type Product } from "../services/api";
 
 interface StoreFilters {
@@ -18,7 +19,7 @@ interface StoreFilters {
 export const StorePage = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const wishlistIds = useSelector((state: RootState) => selectWishlistIds(state));
-  const dispatch = useDispatch<AppDispatch>();
+  const toggleWishlist = useWishlistToggle();
 
   const [filters, setFilters] = useState<StoreFilters>({
     categories: [],
@@ -262,7 +263,7 @@ export const StorePage = () => {
                     product={product}
                     isAuthenticated={isAuthenticated}
                     inWishlist={wishlistIds.includes(product.id)}
-                    onToggleWishlist={(item) => dispatch(toggleWishlist(item))}
+                    onToggleWishlist={toggleWishlist}
                   />
                 ))}
               </div>

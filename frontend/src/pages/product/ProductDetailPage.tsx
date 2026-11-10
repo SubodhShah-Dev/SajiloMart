@@ -6,7 +6,8 @@ import { ProductGrid } from "../../pages/home/ProductGrid";
 import { getProductById, type Product } from "../../services/api.js";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../store";
-import { selectWishlistIds, toggleWishlist } from "../../store/slices/wishlistSlice";
+import { selectWishlistIds } from "../../store/slices/wishlistSlice";
+import { useWishlistToggle } from "../../hooks/useWishlistToggle";
 import { addToCart } from "../../store/slices/cartSlice";
 
 const PLACEHOLDER_IMAGE =
@@ -22,6 +23,7 @@ export const ProductDetailPage = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const wishlistIds = useSelector((state: RootState) => selectWishlistIds(state));
   const dispatch = useDispatch<AppDispatch>();
+  const toggleWishlist = useWishlistToggle();
 
   useEffect(() => {
     let cancelled = false;
@@ -193,7 +195,7 @@ export const ProductDetailPage = () => {
               {isAuthenticated && (
                 <button
                   type="button"
-                  onClick={() => dispatch(toggleWishlist(product))}
+                  onClick={() => toggleWishlist(product)}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-border text-text-secondary hover:bg-surface-hover hover:border-text-muted hover:text-accent transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   aria-label={inWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
                   aria-pressed={inWishlist}

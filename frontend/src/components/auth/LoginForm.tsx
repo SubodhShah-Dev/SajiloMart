@@ -9,6 +9,7 @@ import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardConten
 import type { AppDispatch, RootState } from "../../store";
 import { setCredentials, setPendingRedirect } from "../../store/slices/authSlice";
 import { getApiBaseUrl, loginUser } from "../../services/api";
+import { hydrateAccountData } from "../../hooks/hydrateAccountData";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 
 const loginSchema = z.object({
@@ -56,6 +57,7 @@ export const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
 
       dispatch(setCredentials(user));
       dispatch(setPendingRedirect(null));
+      await hydrateAccountData(dispatch);
       navigate(from, { replace: true });
     } catch (error) {
       setServerError(
@@ -80,7 +82,7 @@ export const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
             role="alert"
             className="mb-4 flex items-start gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm text-accent"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{serverError}</span>
           </div>
         )}

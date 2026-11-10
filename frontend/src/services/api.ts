@@ -248,6 +248,39 @@ export async function updateCurrentUser(
   return data.user;
 }
 
+
+
+export interface WishlistResponse {
+  items: Product[];
+}
+
+export async function getWishlist(): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist");
+}
+
+export async function addWishlistItem(
+  productId: string,
+): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist", {
+    method: "POST",
+    body: JSON.stringify({ productId }),
+  });
+}
+
+export async function removeWishlistItem(
+  productId: string,
+): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>(
+    `/api/wishlist/${encodeURIComponent(productId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function clearWishlist(): Promise<WishlistResponse> {
+  return apiRequest<WishlistResponse>("/api/wishlist", {
+    method: "DELETE",
+  });
+}
 export interface VendorProduct extends Product {
   totalStock: number;
   reservedStock: number;

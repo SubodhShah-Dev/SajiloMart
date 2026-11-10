@@ -9,6 +9,7 @@ import {
   setAuthLoading,
   setCredentials,
 } from "../store/slices/authSlice";
+import { hydrateAccountData } from "./hydrateAccountData";
 
 export function useAuthBootstrap(): void {
   const dispatch = useDispatch<AppDispatch>();
@@ -27,6 +28,7 @@ export function useAuthBootstrap(): void {
       try {
         const user = await getCurrentUser();
         dispatch(setCredentials(user));
+        await hydrateAccountData(dispatch);
         return;
       } catch {
         // The access token may have expired; try the refresh cookie once.
@@ -35,6 +37,7 @@ export function useAuthBootstrap(): void {
       try {
         const user = await refreshSession();
         dispatch(setCredentials(user));
+        await hydrateAccountData(dispatch);
       } catch {
         dispatch(clearAuth());
       }

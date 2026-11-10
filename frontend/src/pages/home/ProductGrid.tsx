@@ -1,13 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 import type { Product } from "../../services/api";
 import { ProductCard } from "../../components/product/ProductCard";
-import type { RootState, AppDispatch } from "../../store";
-import {
-  selectWishlistIds,
-  toggleWishlist,
-} from "../../store/slices/wishlistSlice";
+import type { RootState } from "../../store";
+import { selectWishlistIds } from "../../store/slices/wishlistSlice";
+import { useWishlistToggle } from "../../hooks/useWishlistToggle";
 
 interface ProductGridProps {
   products?: Product[];
@@ -69,7 +67,7 @@ export const ProductGrid = ({
 }: ProductGridProps) => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const wishlistIds = useSelector((state: RootState) => selectWishlistIds(state));
-  const dispatch = useDispatch<AppDispatch>();
+  const toggleWishlist = useWishlistToggle();
 
   if (products.length === 0) return null;
 
@@ -128,7 +126,7 @@ export const ProductGrid = ({
               product={product}
               isAuthenticated={isAuthenticated}
               inWishlist={wishlistIds.includes(product.id)}
-              onToggleWishlist={(item) => dispatch(toggleWishlist(item))}
+              onToggleWishlist={toggleWishlist}
             />
           ))}
         </div>
