@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
+import { Store, TrendingUp, Shield, Truck } from "lucide-react";
+import { Button } from "../components/ui";
 
 import { HeroBanner } from "./home/HeroBanner";
 import { CategoryGrid } from "./home/CategoryGrid";
@@ -69,6 +72,58 @@ const Home = () => {
       </a>
 
       <HeroBanner banners={mockBanners} />
+
+      {/* Seller CTA Band */}
+      <section className="bg-primary-light border-y border-primary/20 py-6" aria-labelledby="seller-cta-heading">
+        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/20 rounded-xl text-primary">
+                <Store className="h-8 w-8" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 id="seller-cta-heading" className="text-xl font-semibold text-text-primary">Want to sell on SajiloMart?</h2>
+                <p className="text-text-secondary text-sm">Open your store in minutes. No approval wait, no hidden fees.</p>
+              </div>
+            </div>
+            <NavLink to="/sell">
+              <Button variant="primary" size="lg" leftIcon={<Store className="h-5 w-5" aria-hidden="true" />}>
+                Start Selling
+              </Button>
+            </NavLink>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <TrendingUp className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="font-medium text-text-primary">Global Reach</p>
+                <p className="text-sm text-text-secondary">Millions of customers</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <Shield className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="font-medium text-text-primary">Secure Payments</p>
+                <p className="text-sm text-text-secondary">Protected transactions</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <Truck className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="font-medium text-text-primary">Easy Shipping</p>
+                <p className="text-sm text-text-secondary">Integrated logistics</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <CategoryGrid categories={mockCategories} maxItems={8} />
 

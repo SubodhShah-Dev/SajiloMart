@@ -8,8 +8,11 @@ import {
   Package,
   Settings,
   ChevronDown,
+  Store,
 } from "lucide-react";
 import { Button } from "../ui";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 
 interface MenuItem {
   label: string;
@@ -37,6 +40,10 @@ const authItems: MenuItem[] = [
   { label: "Logout", to: "/logout", icon: LogOut, isLogout: true },
 ];
 
+const vendorItems: MenuItem[] = [
+  { label: "Seller Dashboard", to: "/seller", icon: Store },
+];
+
 export const UserMenu = ({
   isAuthenticated = false,
   userName = "User",
@@ -46,6 +53,7 @@ export const UserMenu = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const userRole = useSelector((state: RootState) => state.auth.user?.role ?? null);
 
   useEffect(() => {
     const handleClickOutside = (event: globalThis.MouseEvent) => {
@@ -91,7 +99,13 @@ export const UserMenu = ({
     }
   };
 
-  const items = isAuthenticated ? authItems : guestItems;
+  const getItems = () => {
+    if (!isAuthenticated) return guestItems;
+    if (userRole === "VENDOR" || userRole === "ADMIN") {
+      return [...authItems, ...vendorItems];
+    }
+    return authItems;
+  };
 
   return (
     <div className={`relative ${className}`}>
@@ -144,7 +158,7 @@ export const UserMenu = ({
             aria-label={isAuthenticated ? "Account options" : "Guest options"}
           >
             <ul role="list" className="py-1">
-              {items.map((item) => (
+              {getItems().map((item) => (
                 <li key={item.label}>
                   {item.isLogout ? (
                     <NavLink

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle, Loader2, Check } from "lucide-react";
+import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle, Loader2, Check, Store, ExternalLink, ArrowRight, Shield, TrendingUp } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Badge } from "../components/ui";
+import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
 import { setCredentials } from "../store/slices/authSlice";
@@ -309,6 +310,101 @@ export const ProfilePage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {user?.role === "VENDOR" || user?.role === "ADMIN" ? (
+            <div className="lg:col-span-3 mt-8">
+              <Card variant="outlined">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Selling on SajiloMart</CardTitle>
+                  <NavLink to="/seller">
+                    <Button variant="primary" size="sm" leftIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}>
+                      Go to Dashboard
+                    </Button>
+                  </NavLink>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-text-secondary">Manage your store, products, and track your sales performance.</p>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">0</p>
+                      <p className="text-sm text-text-secondary">Active Products</p>
+                    </Card>
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">$0.00</p>
+                      <p className="text-sm text-text-secondary">Total Revenue</p>
+                    </Card>
+                    <Card variant="outlined" className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">0</p>
+                      <p className="text-sm text-text-secondary">Orders This Month</p>
+                    </Card>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <NavLink to="/seller">
+                      <Button variant="primary" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                        Open Seller Dashboard
+                      </Button>
+                    </NavLink>
+                    <NavLink to={`/products/${user.username || "store"}`}>
+                      <Button variant="outline" leftIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}>
+                        View Storefront
+                      </Button>
+                    </NavLink>
+                    <NavLink to="/sell">
+                      <Button variant="outline" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                        Edit Store Profile
+                      </Button>
+                    </NavLink>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="lg:col-span-3 mt-8">
+              <Card variant="outlined">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Start Selling on SajiloMart</CardTitle>
+                  <NavLink to="/sell">
+                    <Button variant="primary" size="sm" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
+                      Create Your Store
+                    </Button>
+                  </NavLink>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-text-secondary">Turn your passion into profit. Join thousands of sellers on our marketplace.</p>
+                  <div className="grid gap-4 md:grid-cols-3 text-center">
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <Shield className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Secure Platform</p>
+                      <p className="text-sm text-text-secondary">Protected payments and seller protection</p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <TrendingUp className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Global Reach</p>
+                      <p className="text-sm text-text-secondary">Access to millions of customers</p>
+                    </div>
+                    <div className="p-4 bg-surface rounded-lg">
+                      <div className="p-3 bg-primary-light rounded-xl text-primary mx-auto mb-3 w-fit">
+                        <Store className="h-6 w-6" aria-hidden="true" />
+                      </div>
+                      <p className="font-medium text-text-primary">Easy Setup</p>
+                      <p className="text-sm text-text-secondary">Start selling in minutes</p>
+                    </div>
+                  </div>
+                  <div className="text-center pt-4">
+                    <NavLink to="/sell">
+                      <Button variant="primary" size="lg" leftIcon={<Store className="h-5 w-5" aria-hidden="true" />}>
+                        Start Selling Now
+                      </Button>
+                    </NavLink>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -7,47 +7,35 @@ import {
   TrendingUp,
   Settings,
   Plus,
-  Clock,
   CheckCircle,
   AlertCircle,
   ArrowRight,
   Shield,
-  RotateCcw,
-  Truck,
   Edit,
   Trash2,
   Eye,
   MoreVertical,
+  Loader2,
+  ExternalLink,
+  BarChart2,
+  X,
 } from "lucide-react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Badge, type BadgeProps } from "../components/ui";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../store";
-import { setIsVendor, setApprovalStatus } from "../store/slices/sellerSlice";
+import { Button, Card, CardContent, CardHeader, CardTitle, Badge, type BadgeProps, Select, Input, Textarea } from "../components/ui";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 import { ProductForm, type ProductFormData } from "../components/seller/ProductForm";
 import {
   getVendorProducts,
   createProduct,
   updateProduct,
   deleteProduct,
+  getMyStore,
+  updateStore,
+  requestVerification,
   type VendorProduct,
+  type StoreSummary,
+  type UpdateStoreInput,
 } from "../services/api";
-
-interface SellerOrder {
-  id: string;
-  customer: string;
-  date: string;
-  total: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  items: number;
-}
-
-const mockSellerOrders: SellerOrder[] = [
-  { id: "ORD-001", customer: "John Doe", date: "2024-01-15", total: 299.99, status: "delivered", items: 1 },
-  { id: "ORD-002", customer: "Jane Smith", date: "2024-01-14", total: 449.98, status: "shipped", items: 2 },
-  { id: "ORD-003", customer: "Bob Wilson", date: "2024-01-13", total: 59.98, status: "processing", items: 2 },
-  { id: "ORD-004", customer: "Alice Brown", date: "2024-01-12", total: 24.99, status: "pending", items: 1 },
-  { id: "ORD-005", customer: "Charlie Davis", date: "2024-01-11", total: 399.99, status: "delivered", items: 1 },
-];
 
 const getStatusBadge = (status: string) => {
   const statusConfig: Record<string, { variant: BadgeProps["variant"]; label: string }> = {
@@ -67,13 +55,11 @@ const getStatusBadge = (status: string) => {
 
 export const SellerPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useSelector((state: RootState) => state.auth.user);
   const userRole = useSelector((state: RootState) => state.auth.user?.role ?? null);
-  const isVendor = useSelector((state: RootState) => state.seller.isVendor);
-  const approvalStatus = useSelector((state: RootState) => state.seller.approvalStatus);
 
+  const [store, setStore] = useState<StoreSummary | null>(null);
   const [products, setProducts] = useState<VendorProduct[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,8 +68,46 @@ export const SellerPage = () => {
   const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [storeLoading, setStoreLoading] = useState(true);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [storeError, setStoreError] = useState<string | null>(null);
+  const [showStoreSettings, setShowStoreSettings] = useState(false);
+  const [settingsFormData, setSettingsFormData] = useState<Partial<UpdateStoreInput>>({});
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
+  // Load store info first
   useEffect(() => {
+    let cancelled = false;
+
+    const loadStore = async () => {
+      setStoreLoading(true);
+      try {
+        const response = await getMyStore();
+        if (!cancelled) {
+          setStore(response.store);
+        }
+      } catch (error) {
+        console.error("Failed to fetch store:", error);
+        if (!cancelled) {
+          setStoreError("Failed to load store information");
+        }
+      } finally {
+        if (!cancelled) {
+          setStoreLoading(false);
+        }
+      }
+    };
+
+    loadStore();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Load products when store exists
+  useEffect(() => {
+    if (!store || storeLoading) return;
+
     let cancelled = false;
 
     const loadProducts = async () => {
@@ -103,7 +127,7 @@ export const SellerPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, statusFilter]);
+  }, [store, storeLoading, currentPage, statusFilter]);
 
   const handleCreateProduct = async (data: ProductFormData) => {
     setFormLoading(true);
@@ -111,7 +135,6 @@ export const SellerPage = () => {
       await createProduct(data);
       setShowForm(false);
       setEditingProduct(null);
-      // Trigger refetch by updating currentPage to 1
       setCurrentPage(1);
     } catch (error) {
       console.error("Failed to create product:", error);
@@ -169,6 +192,35 @@ export const SellerPage = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  const handleRequestVerification = async () => {
+    if (!store) return;
+    setVerificationLoading(true);
+    try {
+      await requestVerification();
+      setStore({ ...store, verificationStatus: "PENDING", verificationRequestedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("Failed to request verification:", error);
+      alert(error instanceof Error ? error.message : "Failed to request verification");
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!store) return;
+    setSettingsLoading(true);
+    try {
+      const updatedStore = await updateStore(settingsFormData);
+      setStore(updatedStore.store);
+      setShowStoreSettings(false);
+    } catch (error) {
+      console.error("Failed to update store:", error);
+      alert(error instanceof Error ? error.message : "Failed to update store");
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -184,7 +236,7 @@ export const SellerPage = () => {
     );
   }
 
-  if (!isVendor && userRole !== "VENDOR") {
+  if (userRole !== "VENDOR" && userRole !== "ADMIN") {
     return (
       <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
@@ -232,7 +284,7 @@ export const SellerPage = () => {
             size="lg"
             fullWidth
             leftIcon={<Plus className="h-5 w-5" aria-hidden="true" />}
-            onClick={() => navigate("/seller/onboarding")}
+            onClick={() => navigate("/sell")}
           >
             Start Selling
           </Button>
@@ -241,57 +293,62 @@ export const SellerPage = () => {
     );
   }
 
-  if (approvalStatus === "pending") {
+  if (storeLoading) {
     return (
-      <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <Clock className="h-16 w-16 text-warning mx-auto mb-4 animate-pulse" />
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Application Under Review</h1>
-          <p className="text-lg text-text-secondary mb-8">
-            Your store application is being reviewed. We'll notify you once approved.
-          </p>
-          <div className="space-y-4 text-left max-w-md mx-auto">
-            <div className="flex items-center gap-3 p-4 bg-surface rounded-lg border border-border">
-              <Clock className="h-6 w-6 text-warning flex-shrink-0" />
-              <div>
-                <p className="font-medium text-text-primary">Under Review</p>
-                <p className="text-sm text-text-secondary">Our team is reviewing your application</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-surface rounded-lg border border-border opacity-50">
-              <Shield className="h-6 w-6 text-text-muted flex-shrink-0" />
-              <div>
-                <p className="font-medium text-text-secondary">Approval</p>
-                <p className="text-sm text-text-muted">You'll receive an email notification</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-surface rounded-lg border border-border opacity-50">
-              <Store className="h-6 w-6 text-text-muted flex-shrink-0" />
-              <div>
-                <p className="font-medium text-text-secondary">Go Live</p>
-                <p className="text-sm text-text-muted">Start selling once approved</p>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-text-secondary">Loading your store...</p>
         </div>
       </div>
     );
   }
 
-  if (approvalStatus === "rejected") {
+  if (storeError || !store) {
+    return (
+      <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <AlertCircle className="h-16 w-16 text-accent mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Store Not Found</h1>
+          <p className="text-lg text-text-secondary mb-8">
+            You don't have a store yet. Create one to start selling.
+          </p>
+          <Button
+            variant="primary"
+            size="lg"
+            leftIcon={<Plus className="h-5 w-5" aria-hidden="true" />}
+            onClick={() => navigate("/sell")}
+          >
+            Create Your Store
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Store exists but status checks
+  if (store.status === "SUSPENDED") {
     return (
       <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <AlertCircle className="h-16 w-16 text-accent mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Application Not Approved</h1>
-          <p className="text-lg text-text-secondary mb-8">
-            Unfortunately, your application was not approved at this time. Please review our guidelines and try again.
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Store Suspended</h1>
+          <p className="text-lg text-text-secondary mb-6">
+            Your store has been suspended. You cannot add products or sell until this is resolved.
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => { dispatch(setIsVendor(false)); dispatch(setApprovalStatus(null)); }}>
-              Try Again
-            </Button>
-            <Button variant="primary" onClick={() => alert("Contact support")}>
+          {store.suspensionReason && (
+            <Card variant="outlined" className="mb-6 text-left">
+              <CardContent className="p-6">
+                <p className="font-medium text-text-primary mb-2">Reason:</p>
+                <p className="text-text-secondary">{store.suspensionReason}</p>
+              </CardContent>
+            </Card>
+          )}
+          <div className="space-y-3">
+            <p className="text-sm text-text-secondary">
+              Contact support if you believe this is an error.
+            </p>
+            <Button variant="primary" onClick={() => alert("Contact support")} leftIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}>
               Contact Support
             </Button>
           </div>
@@ -319,17 +376,124 @@ export const SellerPage = () => {
         />
       )}
 
+      {showStoreSettings && store && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface rounded-xl shadow-xl">
+            <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-surface rounded-t-xl">
+              <h2 className="text-xl font-semibold text-text-primary">Store Settings</h2>
+              <button
+                type="button"
+                onClick={() => setShowStoreSettings(false)}
+                className="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveSettings(); }} className="p-4 space-y-4">
+              <Input
+                label="Store Name"
+                value={settingsFormData.name || store.name}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, name: e.target.value })}
+                required
+              />
+              <Select
+                label="Category"
+                placeholder="Select a category"
+                options={[
+                  { value: "electronics", label: "Electronics" },
+                  { value: "fashion", label: "Fashion" },
+                  { value: "home", label: "Home & Kitchen" },
+                  { value: "beauty", label: "Beauty" },
+                  { value: "sports", label: "Sports" },
+                  { value: "books", label: "Books" },
+                  { value: "toys", label: "Toys & Games" },
+                  { value: "automotive", label: "Automotive" },
+                ]}
+                value={settingsFormData.category || store.category || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, category: e.target.value })}
+              />
+              <Textarea
+                label="Description"
+                value={settingsFormData.description || store.description || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, description: e.target.value })}
+                rows={3}
+              />
+              <Input
+                label="Phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={settingsFormData.phone || store.phone || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, phone: e.target.value })}
+              />
+              <Textarea
+                label="Return Policy"
+                placeholder="Describe your return and refund policy..."
+                rows={3}
+                value={settingsFormData.returnPolicy || store.returnPolicy || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, returnPolicy: e.target.value })}
+              />
+              <Textarea
+                label="Shipping Policy"
+                placeholder="Describe your shipping methods, costs, and delivery times..."
+                rows={3}
+                value={settingsFormData.shippingPolicy || store.shippingPolicy || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, shippingPolicy: e.target.value })}
+              />
+              <Input
+                label="Logo URL (Optional)"
+                type="url"
+                placeholder="https://example.com/logo.png"
+                value={settingsFormData.logoUrl || ""}
+                onChange={(e) => setSettingsFormData({ ...settingsFormData, logoUrl: e.target.value })}
+              />
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <Button type="button" variant="outline" onClick={() => setShowStoreSettings(false)} disabled={settingsLoading}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" isLoading={settingsLoading}>
+                  {settingsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header with badges */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">Seller Dashboard</h1>
             <p className="text-text-secondary">Welcome back, {user?.name || "Vendor"}! Manage your store and track performance.</p>
           </div>
-          <Button variant="primary" leftIcon={<Plus className="h-5 w-5" aria-hidden="true" />} onClick={openCreateForm}>
-            Add Product
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                store.status === "APPROVED" ? "success" :
+                (store.status as StoreSummary["status"]) === "SUSPENDED" ? "danger" :
+                "warning"
+              }
+              size="sm"
+            >
+              {store.status}
+            </Badge>
+            <Badge
+              variant={
+                store.verificationStatus === "VERIFIED" ? "success" :
+                (store.verificationStatus as StoreSummary["verificationStatus"]) === "PENDING" ? "warning" :
+                "danger"
+              }
+              size="sm"
+            >
+              {store.verificationStatus}
+            </Badge>
+          </div>
         </div>
 
+        {/* Stats cards */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {stats.map((stat) => (
             <Card key={stat.label} variant="outlined" hoverable>
@@ -351,6 +515,107 @@ export const SellerPage = () => {
           ))}
         </div>
 
+        {/* Verification card & listing limit meter */}
+        <div className="grid gap-6 lg:grid-cols-3 mb-8">
+          <Card variant="outlined">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" aria-hidden="true" /> Verification</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-text-primary">Status: </p>
+                  <Badge
+                    variant={
+                      store.verificationStatus === "VERIFIED" ? "success" :
+                      store.verificationStatus === "PENDING" ? "warning" :
+                      "danger"
+                    }
+                  >
+                    {store.verificationStatus}
+                  </Badge>
+                </div>
+                <div className="p-2 rounded-lg">
+                  {store.verificationStatus === "VERIFIED" ? (
+                    <div className="text-success">✓ Verified</div>
+                  ) : store.verificationStatus === "PENDING" ? (
+                    <div className="text-warning animate-pulse">⏳ Under Review</div>
+                  ) : (
+                    <div className="text-accent">✗ Rejected</div>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-sm text-text-secondary">
+                {store.verificationStatus === "VERIFIED"
+                  ? "Verified stores enjoy unlimited listings and priority support."
+                  : store.verificationStatus === "PENDING"
+                  ? "Your verification request is under review. You'll be notified once processed."
+                  : "Your verification was rejected. Address the issues and request again."}
+              </p>
+
+              {store.verificationStatus !== "VERIFIED" && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  leftIcon={<Shield className="h-4 w-4" aria-hidden="true" />}
+                  onClick={handleRequestVerification}
+                  isLoading={verificationLoading}
+                >
+                  {verificationLoading ? "Requesting..." : "Request Verification"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5" aria-hidden="true" /> Listing Limit</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-3 bg-border rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{
+                    width: store.listingLimit
+                      ? `${Math.min((store.productCount / store.listingLimit) * 100, 100)}%`
+                      : "0%",
+                  }}
+                />
+              </div>
+              <p className="text-sm text-text-secondary">
+                {store.listingLimit !== null
+                  ? `${store.productCount} of ${store.listingLimit} products used`
+                  : "Unlimited (Verified)"}
+              </p>
+              {store.listingLimit !== null && store.productCount >= store.listingLimit && (
+                <p className="text-sm text-warning flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                  Limit reached — verify to add more
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button variant="primary" fullWidth leftIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />} onClick={() => setShowStoreSettings(true)}>
+                Store Settings
+              </Button>
+              <Button variant="outline" fullWidth leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} onClick={() => window.open(`/products/${store.slug}`, "_blank")}>
+                View Storefront
+              </Button>
+              <Button variant="primary" fullWidth leftIcon={<Plus className="h-4 w-4" aria-hidden="true" />} onClick={openCreateForm}>
+                Add Product
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Products and Orders sections */}
         <div className="grid gap-8 lg:grid-cols-2">
           <Card variant="outlined">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -358,29 +623,10 @@ export const SellerPage = () => {
               <NavLink to="/seller/orders" className="text-sm text-primary hover:text-primary-hover">View All</NavLink>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left p-4 font-medium text-text-secondary">Order ID</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Customer</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Date</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Total</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {mockSellerOrders.slice(0, 5).map((order) => (
-                      <tr key={order.id} className="hover:bg-surface-hover">
-                        <td className="p-4 font-mono text-sm text-text-primary">{order.id}</td>
-                        <td className="p-4 text-sm text-text-secondary">{order.customer}</td>
-                        <td className="p-4 text-sm text-text-secondary">{order.date}</td>
-                        <td className="p-4 font-medium text-text-primary">${order.total.toFixed(2)}</td>
-                        <td className="p-4">{getStatusBadge(order.status)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-8 text-center">
+                <Package className="h-12 w-12 text-text-muted mx-auto mb-4" />
+                <p className="text-text-secondary mb-4">Order management coming soon</p>
+                <Badge variant="default" size="sm">Orders coming soon</Badge>
               </div>
             </CardContent>
           </Card>
@@ -526,29 +772,6 @@ export const SellerPage = () => {
         <div className="mt-8 grid gap-6 sm:grid-cols-3">
           <Card variant="outlined">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Package className="h-5 w-5" aria-hidden="true" /> Order Management</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <NavLink to="/seller/orders" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Package className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">All Orders</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/seller/orders?status=pending" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Clock className="h-5 w-5 text-warning" aria-hidden="true" />
-                <span className="text-text-primary">Pending Orders</span>
-                <Badge variant="warning" size="sm">5</Badge>
-              </NavLink>
-              <NavLink to="/seller/returns" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <RotateCcw className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Returns & Refunds</span>
-                <Badge variant="default" size="sm">2</Badge>
-              </NavLink>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardHeader>
               <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Product Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -575,24 +798,29 @@ export const SellerPage = () => {
 
           <Card variant="outlined">
             <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Package className="h-5 w-5" aria-hidden="true" /> Order Management</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="p-3 bg-surface rounded-lg text-center">
+                <p className="text-sm text-text-secondary mb-2">Order management coming soon</p>
+                <Badge variant="default" size="sm">Coming soon</Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" aria-hidden="true" /> Store Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <NavLink to="/seller/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Settings className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Store Profile</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/seller/settings/payments" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <DollarSign className="h-5 w-5 text-success" aria-hidden="true" />
-                <span className="text-text-primary">Payment Settings</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/seller/settings/shipping" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Truck className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Shipping Options</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
+              <Button
+                variant="primary"
+                fullWidth
+                leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+                onClick={() => setShowStoreSettings(true)}
+              >
+                Store Profile & Settings
+              </Button>
             </CardContent>
           </Card>
         </div>

@@ -445,3 +445,164 @@ export async function deleteProduct(
     signal,
   });
 }
+
+export interface StoreSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  category: string | null;
+  phone: string | null;
+  status: "PENDING" | "APPROVED" | "SUSPENDED";
+  verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  listingLimit: number | null;
+  productCount: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  verificationRequestedAt: string | null;
+  suspensionReason: string | null;
+  returnPolicy: string | null;
+  shippingPolicy: string | null;
+}
+
+export interface StoreSummaryResponse {
+  store: StoreSummary | null;
+}
+
+export interface CreateStoreInput {
+  name: string;
+  description: string;
+  category: string;
+  phone?: string;
+  returnPolicy?: string;
+  shippingPolicy?: string;
+  logoUrl?: string;
+}
+
+export interface UpdateStoreInput {
+  name?: string;
+  description?: string;
+  category?: string;
+  phone?: string;
+  returnPolicy?: string;
+  shippingPolicy?: string;
+  logoUrl?: string;
+}
+
+export interface AdminStoreSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  category: string | null;
+  phone: string | null;
+  status: "PENDING" | "APPROVED" | "SUSPENDED";
+  verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  listingLimit: number | null;
+  productCount: number;
+  createdAt: string;
+  verifiedAt: string | null;
+  suspensionReason: string | null;
+  owner: {
+    name: string;
+    username: string;
+    email: string;
+  };
+}
+
+export interface AdminStoresResponse {
+  stores: AdminStoreSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminVerifyStoreInput {
+  listingLimit?: number | null;
+}
+
+export interface AdminRejectStoreInput {
+  reason: string;
+}
+
+export interface AdminSuspendStoreInput {
+  reason: string;
+}
+
+export async function getMyStore(): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store");
+}
+
+export async function createStore(input: CreateStoreInput): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateStore(input: UpdateStoreInput): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function requestVerification(): Promise<StoreSummaryResponse> {
+  return apiRequest<StoreSummaryResponse>("/api/seller/store/verification", {
+    method: "POST",
+  });
+}
+
+export async function getAdminStores(
+  filters: { page?: number; limit?: number; status?: string; verificationStatus?: string; search?: string } = {},
+): Promise<AdminStoresResponse> {
+  const params = new URLSearchParams();
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.status) params.set("status", filters.status);
+  if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+  if (filters.search) params.set("search", filters.search);
+
+  return apiRequest<AdminStoresResponse>(`/api/admin/stores?${params.toString()}`);
+}
+
+export async function adminSuspendStore(
+  storeId: string,
+  input: AdminSuspendStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/suspend`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function adminUnsuspendStore(
+  storeId: string,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/unsuspend`, {
+    method: "POST",
+  });
+}
+
+export async function adminVerifyStore(
+  storeId: string,
+  input: AdminVerifyStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/verify`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function adminRejectStore(
+  storeId: string,
+  input: AdminRejectStoreInput,
+): Promise<{ store: AdminStoreSummary }> {
+  return apiRequest<{ store: AdminStoreSummary }>(`/api/admin/stores/${encodeURIComponent(storeId)}/reject-verification`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
