@@ -20,13 +20,13 @@ The MVP includes:
 - Email/password and Google authentication.
 - Authenticated cart, wishlist, reviews, and buyer–seller chat.
 - Multi-vendor checkout with Cash on Delivery and Stripe Checkout Sandbox.
-- Seller onboarding, product management, and order fulfillment.
-- Admin seller approval, product moderation, and review moderation.
+- **Self-serve seller onboarding** (no admin approval), product management, and order fulfillment.
+- **Admin seller moderation** (verify, suspend, reject verification), product moderation, and review moderation.
 
 Roles are `CUSTOMER`, `VENDOR`, and `ADMIN`. `SUPERADMIN` is deferred. Out of
 scope for the MVP: payouts, returns/refunds, coupons, flash sales, email
 verification, password reset, file uploads, product variants, WebSockets,
-multi-currency, and production deployment.
+multi-currency, production deployment, and **identity documents for KYC**.
 
 ## 2. Repository layout
 
@@ -74,14 +74,24 @@ multi-currency, and production deployment.
 ## 6. Roles and security
 
 - Public registration creates `CUSTOMER` only.
-- `VENDOR` requires admin approval; `ADMIN` is securely provisioned.
-- There is no public admin registration.
+- `VENDOR` is self-serve: a CUSTOMER creates a store and immediately becomes VENDOR.
+  Admin verifies identity, lifts listing limits, and suspends for policy violations.
+  There is no admission queue or approval step for becoming a vendor.
+- `ADMIN` is securely provisioned; there is no public admin registration.
 - Backend authorization is authoritative. Frontend checks are for UI only.
 - Verify ownership on every customer and seller resource.
 - JWTs live in HTTP-only cookies, never in `localStorage` or `sessionStorage`.
   Refresh tokens are hashed and rotated.
 - Never log passwords, tokens, cookies, or secrets. Never commit `.env` files.
 - Geography is reference data for addresses only. No geographic admin roles.
+
+### Seller trust tiers
+
+- **UNVERIFIED** (default): listing limit = `SELLER_UNVERIFIED_LISTING_LIMIT` (default 5).
+- **VERIFIED**: listing limit = `NULL` (unlimited).
+- New store starts with `status = APPROVED`, `verification_status = UNVERIFIED`.
+- Admin actions: verify (with optional listing limit), reject verification, suspend, unsuspend.
+- Products from suspended stores are hidden from browse and product detail.
 
 ## 7. Step workflow
 

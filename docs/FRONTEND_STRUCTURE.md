@@ -113,6 +113,11 @@ frontend/src/
     chat/
       api.ts
       components/
+    seller/
+      api.ts              # seller store, products, verification
+      types.ts
+      components/
+      pages/
   pages/                  # only route pages that belong to no feature
   services/               # existing api.ts (health); migrate or remove later
   main.tsx
@@ -168,7 +173,7 @@ normalises errors to `{ status, data }`.
 
 | State | Location |
 |---|---|
-| Products, orders, cart, wishlist, chat | `baseApi` cache (server state) |
+| Products, orders, cart, wishlist, chat, seller store | `baseApi` cache (server state) |
 | Authenticated user and session status | `features/auth/slice.ts` |
 | Cart | Server only; no duplicate cart slice |
 | Search, filters, page | URL `searchParams` |
@@ -200,7 +205,7 @@ Tokens must never be stored in Redux; authentication uses HTTP-only cookies.
    file.
 3. Add `app/router.tsx`, `components/layout/`, and shared `components/ui/`.
 4. Add one feature folder per MVP step as that step begins (`catalog`, `cart`,
-   `wishlist`, `orders`, `chat`).
+   `wishlist`, `orders`, `chat`, `seller`).
 
 ## 8. Follow-ups before implementation
 
