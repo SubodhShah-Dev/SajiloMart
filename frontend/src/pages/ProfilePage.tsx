@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { User, Mail, Phone, Camera, Save, AlertCircle, CheckCircle, Loader2, Check } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Badge } from "../components/ui";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
 import { setCredentials } from "../store/slices/authSlice";
-import { updateCurrentUser } from "../services/api";
+import { updateCurrentUser, checkUsernameAvailable } from "../services/api";
+
+type UsernameStatus = "idle" | "checking" | "available" | "taken";
 
 export const ProfilePage = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -16,9 +18,53 @@ export const ProfilePage = () => {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone ?? "",
+    username: user?.username || "",
   });
   const [avatar, setAvatar] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
+  const checkUsername = useCallback(async (username: string) => {
+    if (!user) return;
+    if (!username || username === user.username) {
+      setUsernameStatus("idle");
+      setUsernameError(null);
+      return;
+    }
+
+    if (!/^[a-z][a-z0-9_]{2,29}$/.test(username)) {
+      setUsernameStatus("idle");
+      setUsernameError("Username must start with a letter and contain only lowercase letters, numbers, and underscores (3-30 characters)");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    setUsernameError(null);
+
+    try {
+      const result = await checkUsernameAvailable(username);
+      if (result.available) {
+        setUsernameStatus("available");
+      } else {
+        setUsernameStatus("taken");
+        setUsernameError("That username is taken");
+      }
+    } catch {
+      setUsernameStatus("idle");
+      setUsernameError("Unable to check availability");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !isEditing) return;
+
+    const timer = setTimeout(() => {
+      checkUsername(formData.username);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [user, formData.username, isEditing, checkUsername]);
 
   if (!user) {
     return (
@@ -36,6 +82,7 @@ export const ProfilePage = () => {
       const updatedUser = await updateCurrentUser({
         name: formData.name,
         phone: formData.phone,
+        username: formData.username,
       });
 
       dispatch(setCredentials(updatedUser));
@@ -43,6 +90,7 @@ export const ProfilePage = () => {
         ...current,
         name: updatedUser.name,
         phone: updatedUser.phone ?? "",
+        username: updatedUser.username,
       }));
       setIsEditing(false);
       setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -62,8 +110,11 @@ export const ProfilePage = () => {
       name: user.name,
       email: user.email,
       phone: user.phone ?? "",
+      username: user.username || "",
     });
     setIsEditing(false);
+    setUsernameStatus("idle");
+    setUsernameError(null);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +180,7 @@ export const ProfilePage = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-text-primary">{user?.name || "User"}</h2>
+                    <p className="text-sm text-text-secondary">@{user?.username || "user"}</p>
                     <p className="text-sm text-text-secondary">{user?.email || ""}</p>
                     <Badge variant={user?.role === "VENDOR" ? "primary" : user?.role === "ADMIN" ? "secondary" : "default"} size="sm" className="mt-2">
                       {user?.role || "CUSTOMER"}
@@ -206,6 +258,31 @@ export const ProfilePage = () => {
                   disabled={!isEditing}
                   leftIcon={<Phone className="h-5 w-5" aria-hidden="true" />}
                   placeholder="+1 (555) 000-0000"
+                />
+
+                <Input
+                  label="Username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase() })}
+                  disabled={!isEditing}
+                  leftIcon={<User className="h-5 w-5" aria-hidden="true" />}
+                  placeholder="Enter username"
+                  rightIcon={
+                    usernameStatus === "checking" ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+                    ) : usernameStatus === "available" ? (
+                      <Check className="h-5 w-5 text-success" aria-hidden="true" />
+                    ) : usernameStatus === "taken" ? (
+                      <AlertCircle className="h-5 w-5 text-accent" aria-hidden="true" />
+                    ) : null
+                  }
+                  error={usernameError ?? undefined}
+                  hint={
+                    usernameStatus === "available" ? "Available" :
+                    usernameStatus === "taken" ? (usernameError ?? "That username is taken") :
+                    usernameStatus === "checking" ? "Checking..." :
+                    "Username must start with a letter, 3-30 chars, lowercase/numbers/underscores only"
+                  }
                 />
 
                 <div className="pt-4 border-t border-border">

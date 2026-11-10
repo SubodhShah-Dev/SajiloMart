@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  checkUsernameAvailable,
   getMe,
   googleCallback,
   googleLogin,
@@ -30,3 +31,4 @@ authRouter.get("/google/callback", googleCallback);
 
 authRouter.get("/me", authenticateToken, getMe);
 authRouter.patch("/me", authenticateToken, validateBody(updateProfileSchema), updateMe);
+authRouter.get("/username-available", checkUsernameAvailable);

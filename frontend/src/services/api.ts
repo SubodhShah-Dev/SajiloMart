@@ -48,6 +48,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   name: string;
+  username: string;
   email: string;
   role: AuthUserRole;
   phone: string | null;
@@ -68,6 +69,7 @@ export interface RegisterInput {
 export interface UpdateProfileInput {
   name?: string;
   phone?: string;
+  username?: string;
 }
 
 interface ApiSuccess<T> {
@@ -248,7 +250,88 @@ export async function updateCurrentUser(
   return data.user;
 }
 
+export interface UsernameAvailableResponse {
+  available: boolean;
+  username: string;
+}
 
+export async function checkUsernameAvailable(
+  username: string,
+): Promise<UsernameAvailableResponse> {
+  return apiRequest<UsernameAvailableResponse>(
+    `/api/auth/username-available?username=${encodeURIComponent(username)}`,
+  );
+}
+
+export interface CartItemResponse {
+  id: string;
+  productId: string;
+  quantity: number;
+  product: Product;
+}
+
+export interface CartResponse {
+  id: string;
+  items: CartItemResponse[];
+  subtotal: number;
+  itemCount: number;
+}
+
+export interface AddCartItemInput {
+  productId: string;
+  quantity?: number;
+}
+
+export interface UpdateCartQtyInput {
+  quantity: number;
+}
+
+export interface AnonymousCartItem {
+  productId: string;
+  quantity: number;
+}
+
+export async function getCart(): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart");
+}
+
+export async function addCartItem(input: AddCartItemInput): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateCartQty(
+  productId: string,
+  input: UpdateCartQtyInput,
+): Promise<CartResponse> {
+  return apiRequest<CartResponse>(`/api/cart/${encodeURIComponent(productId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function removeCartItem(productId: string): Promise<CartResponse> {
+  return apiRequest<CartResponse>(`/api/cart/${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function clearCart(): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart", {
+    method: "DELETE",
+  });
+}
+
+export async function mergeAnonymousCart(
+  items: AnonymousCartItem[],
+): Promise<CartResponse> {
+  return apiRequest<CartResponse>("/api/cart/merge", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+}
 
 export interface WishlistResponse {
   items: Product[];
@@ -281,6 +364,7 @@ export async function clearWishlist(): Promise<WishlistResponse> {
     method: "DELETE",
   });
 }
+
 export interface VendorProduct extends Product {
   totalStock: number;
   reservedStock: number;
