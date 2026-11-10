@@ -79,6 +79,16 @@ function parseBcryptRounds(value: string | undefined): number {
   return rounds;
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number, name: string): number {
+  const parsed = Number(value ?? String(fallback));
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`Invalid ${name} "${value ?? ""}". Expected a positive integer.`);
+  }
+
+  return parsed;
+}
+
 function parseFrontendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
   const fallback =
     nodeEnv === "production" ? undefined : "http://localhost:5173";
@@ -99,7 +109,7 @@ function parseFrontendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
 
 function parseBackendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
   const fallback =
-    nodeEnv === "production" ? undefined : "http://localhost:5000";
+    nodeEnv === "production" ? undefined : "http://localhost:4000";
   const rawValue = value ?? fallback;
 
   if (rawValue === undefined || rawValue === "") {
@@ -138,4 +148,9 @@ export const env = Object.freeze({
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   backendUrl: parseBackendUrl(process.env.BACKEND_URL, nodeEnv),
+  sellerUnverifiedListingLimit: parsePositiveInt(
+    process.env.SELLER_UNVERIFIED_LISTING_LIMIT,
+    5,
+    "SELLER_UNVERIFIED_LISTING_LIMIT",
+  ),
 });

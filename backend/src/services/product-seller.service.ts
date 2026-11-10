@@ -60,6 +60,20 @@ export async function createProduct(
       throw new AppError("Store must be approved to add products.", 403);
     }
 
+    // Enforce listing limit for unverified stores
+    if (store.listingLimit !== null) {
+      const activeProductCount = await manager.count(Product, {
+        where: { storeId: store.id, isRemoved: false },
+      });
+
+      if (activeProductCount >= store.listingLimit) {
+        throw new AppError(
+          "You've reached your listing limit. Complete verification to add more.",
+          403,
+        );
+      }
+    }
+
     const product = manager.create(Product);
     product.name = input.name;
     product.description = input.description ?? "";

@@ -708,6 +708,12 @@ const storesData: Array<{
   description: string | null;
   logoUrl: string | null;
   status: "PENDING" | "APPROVED" | "SUSPENDED";
+  category: string | undefined;
+  phone: string | undefined;
+  returnPolicy: string | undefined;
+  shippingPolicy: string | undefined;
+  verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  listingLimit: number | null;
 }> = [];
 
 async function main() {
@@ -744,6 +750,12 @@ async function main() {
         description: "Electronics and gadgets store.",
         logoUrl: null,
         status: "APPROVED",
+        category: "electronics",
+        phone: undefined,
+        returnPolicy: undefined,
+        shippingPolicy: undefined,
+        verificationStatus: "VERIFIED",
+        listingLimit: null,
       },
       {
         ownerId: vendors[1].id,
@@ -752,6 +764,12 @@ async function main() {
         description: "Fashion and apparel store.",
         logoUrl: null,
         status: "APPROVED",
+        category: "fashion",
+        phone: undefined,
+        returnPolicy: undefined,
+        shippingPolicy: undefined,
+        verificationStatus: "VERIFIED",
+        listingLimit: null,
       },
       {
         ownerId: vendors[2].id,
@@ -760,6 +778,12 @@ async function main() {
         description: "Home and living products.",
         logoUrl: null,
         status: "APPROVED",
+        category: "home",
+        phone: undefined,
+        returnPolicy: undefined,
+        shippingPolicy: undefined,
+        verificationStatus: "VERIFIED",
+        listingLimit: null,
       },
     );
 
