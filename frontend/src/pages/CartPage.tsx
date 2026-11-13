@@ -1,19 +1,162 @@
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Trash2, Plus, Minus, ArrowLeft, CreditCard } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from "../components/ui";
 import type { CartItem } from "../store/slices/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
-import { updateQuantity, removeFromCart, clearCart } from "../store/slices/cartSlice";
+import { updateQuantity, removeFromCart, clearCart, setCart } from "../store/slices/cartSlice";
+import { getCart, updateCartQty, removeCartItem, clearCart as apiClearCart } from "../services/api";
+import { selectIsAuthenticated } from "../store/slices/authSlice";
 
 export const CartPage = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const subtotal = useSelector((state: RootState) => state.cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0));
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const dispatch = useDispatch<AppDispatch>();
+  const [loading, setLoading] = useState(true);
 
+  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shipping = subtotal >= 50 ? 0 : 9.99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
+
+  // Fetch cart on mount for authenticated users
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchCart = async () => {
+      if (!isAuthenticated) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      try {
+        const cart = await getCart();
+        if (mounted && cart.items?.length) {
+          dispatch(setCart(cart.items));
+        }
+      } catch {
+        // Failed to fetch cart, keep local state
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchCart();
+
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, isAuthenticated]);
+
+  const handleQuantityChange = async (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      handleRemove(productId);
+      return;
+    }
+
+    // Optimistic update
+    dispatch(updateQuantity({ productId, quantity }));
+
+    if (isAuthenticated) {
+      try {
+        await updateCartQty(productId, { quantity });
+      } catch (error) {
+        // Revert on error - fetch fresh cart
+        const message = error instanceof Error ? error.message : "Failed to update quantity";
+        console.error(message);
+        try {
+          const cart = await getCart();
+          if (cart.items?.length) {
+            dispatch(setCart(cart.items));
+          }
+        } catch {
+          // Keep optimistic update if fetch also fails
+        }
+      }
+    }
+  };
+
+  const handleRemove = async (productId: string) => {
+    // Optimistic update
+    dispatch(removeFromCart(productId));
+
+    if (isAuthenticated) {
+      try {
+        await removeCartItem(productId);
+      } catch (error) {
+        // Revert on error - fetch fresh cart
+        const message = error instanceof Error ? error.message : "Failed to remove item";
+        console.error(message);
+        try {
+          const cart = await getCart();
+          if (cart.items?.length) {
+            dispatch(setCart(cart.items));
+          }
+        } catch {
+          // Keep optimistic update if fetch also fails
+        }
+      }
+    }
+  };
+
+  const handleClearCart = async () => {
+    // Optimistic update
+    dispatch(clearCart());
+
+    if (isAuthenticated) {
+      try {
+        await apiClearCart();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to clear cart";
+        console.error(message);
+        try {
+          const cart = await getCart();
+          if (cart.items?.length) {
+            dispatch(setCart(cart.items));
+          }
+        } catch {
+          // Keep optimistic update if fetch also fails
+        }
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-surface flex items-center justify-center">
+            <svg className="h-10 w-10 text-text-muted animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <p className="text-lg text-text-secondary">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto mb-8 w-20 h-20 rounded-full bg-surface flex items-center justify-center">
+            <svg className="h-10 w-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-text-primary mb-4">Sign In to View Cart</h1>
+          <p className="text-lg text-text-secondary mb-8">You need to be signed in to view and manage your cart.</p>
+          <NavLink to="/auth" className="inline-flex items-center gap-2">
+            <Button variant="primary" size="lg">
+              Sign In
+            </Button>
+          </NavLink>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -35,14 +178,6 @@ export const CartPage = () => {
       </div>
     );
   }
-
-  const handleQuantityChange = (productId: string, quantity: number) => {
-    dispatch(updateQuantity({ productId, quantity }));
-  };
-
-  const handleRemove = (productId: string) => {
-    dispatch(removeFromCart(productId));
-  };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
@@ -126,7 +261,7 @@ export const CartPage = () => {
             </Card>
 
             <div className="mt-6 flex justify-end">
-              <Button variant="ghost" onClick={() => dispatch(clearCart())} className="text-accent hover:text-accent-hover">
+              <Button variant="ghost" onClick={handleClearCart} className="text-accent hover:text-accent-hover">
                 Clear Cart
               </Button>
             </div>

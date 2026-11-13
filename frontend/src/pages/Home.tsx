@@ -71,7 +71,7 @@ const Home = () => {
         Skip to main content
       </a>
 
-      <HeroBanner banners={mockBanners} />
+      <HeroBanner banners={mockBanners} className="mb-10" />
 
       {/* Seller CTA Band */}
       <section className="bg-primary-light border-y border-primary/20 py-6" aria-labelledby="seller-cta-heading">
@@ -86,7 +86,7 @@ const Home = () => {
                 <p className="text-text-secondary text-sm">Open your store in minutes. No approval wait, no hidden fees.</p>
               </div>
             </div>
-            <NavLink to="/sell">
+            <NavLink to="/seller">
               <Button variant="primary" size="lg" leftIcon={<Store className="h-5 w-5" aria-hidden="true" />}>
                 Start Selling
               </Button>

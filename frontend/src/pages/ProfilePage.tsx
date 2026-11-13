@@ -349,7 +349,7 @@ export const ProfilePage = () => {
                         View Storefront
                       </Button>
                     </NavLink>
-                    <NavLink to="/sell">
+                    <NavLink to="/seller">
                       <Button variant="outline" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
                         Edit Store Profile
                       </Button>
@@ -363,7 +363,7 @@ export const ProfilePage = () => {
               <Card variant="outlined">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Start Selling on SajiloMart</CardTitle>
-                  <NavLink to="/sell">
+                  <NavLink to="/seller">
                     <Button variant="primary" size="sm" leftIcon={<Store className="h-4 w-4" aria-hidden="true" />}>
                       Create Your Store
                     </Button>
@@ -395,7 +395,7 @@ export const ProfilePage = () => {
                     </div>
                   </div>
                   <div className="text-center pt-4">
-                    <NavLink to="/sell">
+                    <NavLink to="/seller">
                       <Button variant="primary" size="lg" leftIcon={<Store className="h-5 w-5" aria-hidden="true" />}>
                         Start Selling Now
                       </Button>

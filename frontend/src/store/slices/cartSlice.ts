@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Product } from "../../services/api";
+import type { Product, CartItemResponse } from "../../services/api";
 
 export interface CartItem {
   product: Product;
@@ -13,6 +13,13 @@ interface CartState {
 const initialState: CartState = {
   items: [],
 };
+
+function cartItemResponseToCartItem(item: CartItemResponse): CartItem {
+  return {
+    product: item.product,
+    quantity: item.quantity,
+  };
+}
 
 const cartSlice = createSlice({
   name: "cart",
@@ -51,10 +58,13 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.items = [];
     },
+    setCart: (state, action: PayloadAction<CartItemResponse[]>) => {
+      state.items = action.payload.map(cartItemResponseToCartItem);
+    },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, updateQuantity, clearCart, setCart } = cartSlice.actions;
 
 export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
 export const selectCartCount = (state: { cart: CartState }) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0);

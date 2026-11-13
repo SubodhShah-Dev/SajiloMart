@@ -1,14 +1,21 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 
-export const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
+export const RequireAdmin = () => {
+  const location = useLocation();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const userRole = useSelector((state: RootState) => state.auth.user?.role ?? null);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: "/admin" }} replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
   }
 
   if (userRole !== "ADMIN") {
@@ -24,5 +31,5 @@ export const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 };

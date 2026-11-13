@@ -7,7 +7,7 @@ interface NavLinksProps {
 const navItems = [
   { path: "/", label: "Home", exact: true },
   { path: "/browse", label: "Browse", exact: false },
-  { path: "/sell", label: "Sell", exact: false },
+  { path: "/seller", label: "Sell", exact: false },
 ];
 
 export const NavLinks = ({ className = "" }: NavLinksProps) => {

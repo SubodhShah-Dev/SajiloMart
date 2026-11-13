@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/Layout";
 import { RequireAuth } from "./components/auth/RequireAuth";
+import { RequireAdmin } from "./components/auth/RequireAdmin";
 import { useAuthBootstrap } from "./hooks/useAuthBootstrap";
 import { AdminPage } from "./pages/Admin";
 import { CartPage } from "./pages/CartPage";
@@ -12,12 +13,11 @@ import NotFound from "./pages/NotFound";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ProductDetailPage } from "./pages/product/ProductDetailPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { SellerPage } from "./pages/Seller";
+import { SellerPage } from "./pages/seller/SellerPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { WishlistPage } from "./pages/WishlistPage";
 import { AuthPage } from "./pages/auth";
 import { BrowsePage } from "./pages/browse/BrowsePage";
-import { StoreOnboardingPage } from "./pages/seller";
 import type { RootState } from "./store";
 import { selectAuthStatus } from "./store/slices/authSlice";
 
@@ -62,11 +62,20 @@ const App = () => {
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/seller/onboarding" element={<StoreOnboardingPage />} />
+            <Route path="/sell" element={<Navigate to="/seller" replace />} />
             <Route path="/seller" element={<SellerPage />} />
+            <Route path="/seller/products" element={<SellerPage />} />
+            <Route path="/seller/settings" element={<SellerPage />} />
+            <Route
+              path="/seller/onboarding"
+              element={<Navigate to="/seller" replace />}
+            />
           </Route>
 
-          <Route path="/admin" element={<AdminPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin/*" element={<AdminPage />} />
+          </Route>
+
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>

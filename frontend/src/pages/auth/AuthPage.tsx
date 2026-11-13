@@ -54,7 +54,7 @@ export const AuthPage = () => {
             role="alert"
             className="mb-6 flex items-start gap-3 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm text-accent"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               {oauthErrorMessages[oauthError] ??
                 "Sign-in failed. Please try again."}

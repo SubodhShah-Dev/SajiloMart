@@ -21,3 +21,6 @@ backend/logs/*
 docs/implementation/
 plans/
 certs/
+
+.kilo/
+.opencode

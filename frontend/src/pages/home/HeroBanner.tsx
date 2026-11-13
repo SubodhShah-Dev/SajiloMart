@@ -7,12 +7,14 @@ interface HeroBannerProps {
   banners?: Banner[];
   autoPlay?: boolean;
   autoPlayInterval?: number;
+  className?: string;
 }
 
 export const HeroBanner = ({
   banners = [],
   autoPlay = true,
   autoPlayInterval = 5000,
+  className = "",
 }: HeroBannerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -43,7 +45,7 @@ export const HeroBanner = ({
 
   return (
     <section
-      className="relative w-full overflow-hidden"
+      className={`relative w-full overflow-hidden ${className}`}
       aria-label="Hero banner carousel"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
