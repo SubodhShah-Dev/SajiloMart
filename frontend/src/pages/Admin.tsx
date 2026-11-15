@@ -53,7 +53,6 @@ export const AdminPage = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<string>("");
   const [verificationFilter, setVerificationFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -66,7 +65,6 @@ export const AdminPage = () => {
       const result = await getAdminStores({
         page,
         limit,
-        status: statusFilter || undefined,
         verificationStatus: verificationFilter || undefined,
         search: search || undefined,
       });
@@ -77,7 +75,7 @@ export const AdminPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, statusFilter, verificationFilter, search]);
+  }, [page, limit, verificationFilter, search]);
 
   // Chart data from real store data
   const verificationChartData = [
@@ -343,118 +341,197 @@ export const AdminPage = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-8 lg:grid-cols-2 mb-8">
+        {/* Stat cards - real data from store list */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card variant="outlined">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Sellers</CardTitle>
-              <Badge variant="warning" size="sm">{stores.filter((s: AdminStoreSummary) => s.verificationStatus === "PENDING").length} Pending Verification</Badge>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    placeholder="Search by name, email, username..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
-                    className="w-full sm:w-64"
-                  />
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                    options={[
-                      { value: "", label: "All Status" },
-                      { value: "APPROVED", label: "Approved" },
-                      { value: "SUSPENDED", label: "Suspended" },
-                      { value: "PENDING", label: "Pending" },
-                    ]}
-                    className="w-full sm:w-40"
-                  />
-                  <Select
-                    value={verificationFilter}
-                    onChange={(e) => { setVerificationFilter(e.target.value); setPage(1); }}
-                    options={[
-                      { value: "", label: "All Verification" },
-                      { value: "UNVERIFIED", label: "Unverified" },
-                      { value: "PENDING", label: "Pending" },
-                      { value: "VERIFIED", label: "Verified" },
-                      { value: "REJECTED", label: "Rejected" },
-                    ]}
-                    className="w-full sm:w-48"
-                  />
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Total Stores</p>
+                  <p className="text-2xl font-bold text-text-primary">{total}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={String(limit)}
-                    onChange={(e) => { setLimit(parseInt(e.target.value, 10)); setPage(1); }}
-                    options={[
-                      { value: "10", label: "10 per page" },
-                      { value: "20", label: "20 per page" },
-                      { value: "50", label: "50 per page" },
-                      { value: "100", label: "100 per page" },
-                    ]}
-                    className="w-36"
-                  />
+                <div className="p-3 bg-primary-light rounded-lg text-primary">
+                  <Store className="h-5 w-5" aria-hidden="true" />
                 </div>
               </div>
-
-              {loading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Pending Verification</p>
+                  <p className="text-2xl font-bold text-warning">
+                    {stores.filter((s) => s.verificationStatus === "PENDING").length}
+                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left p-4 font-medium text-text-secondary">Store</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Owner</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Category</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Products</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Status</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Verification</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Listing Limit</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Created</th>
-                          <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {storeRows}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {total > limit && (
-                    <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <span className="text-sm text-text-secondary">
-                        Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} stores
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPage((p: number) => Math.max(1, p - 1))}
-                          disabled={page === 1 || loading}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPage((p: number) => Math.min(Math.ceil(total / limit), p + 1))}
-                          disabled={page === Math.ceil(total / limit) || loading}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+                <div className="p-3 bg-warning/10 rounded-lg text-warning">
+                  <ShieldAlert className="h-5 w-5" aria-hidden="true" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Verified Stores</p>
+                  <p className="text-2xl font-bold text-success">
+                    {stores.filter((s) => s.verificationStatus === "VERIFIED").length}
+                  </p>
+                </div>
+                <div className="p-3 bg-success/10 rounded-lg text-success">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Suspended Stores</p>
+                  <p className="text-2xl font-bold text-danger">
+                    {stores.filter((s) => s.status === "SUSPENDED").length}
+                  </p>
+                </div>
+                <div className="p-3 bg-danger/10 rounded-lg text-danger">
+                  <Ban className="h-5 w-5" aria-hidden="true" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Verification chart */}
+        <Card variant="outlined" className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" aria-hidden="true" />
+              Stores by Verification Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={verificationChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" fill="#58A6FF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stores table - full width */}
+        <Card variant="outlined">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" aria-hidden="true" />
+              Sellers
+            </CardTitle>
+            <Badge variant="warning" size="sm">
+              {stores.filter((s: AdminStoreSummary) => s.verificationStatus === "PENDING").length} Pending Verification
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  placeholder="Search stores by name, owner..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
+                  className="w-full sm:w-80"
+                />
+                <Select
+                  value={verificationFilter}
+                  onChange={(e) => { setVerificationFilter(e.target.value); setPage(1); }}
+                  options={[
+                    { value: "", label: "All Verification" },
+                    { value: "UNVERIFIED", label: "Unverified" },
+                    { value: "PENDING", label: "Pending" },
+                    { value: "VERIFIED", label: "Verified" },
+                    { value: "REJECTED", label: "Rejected" },
+                  ]}
+                  className="w-full sm:w-64"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={String(limit)}
+                  onChange={(e) => { setLimit(parseInt(e.target.value, 10)); setPage(1); }}
+                  options={[
+                    { value: "10", label: "10 per page" },
+                    { value: "20", label: "20 per page" },
+                    { value: "50", label: "50 per page" },
+                    { value: "100", label: "100 per page" },
+                  ]}
+                  className="w-36"
+                />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-4 font-medium text-text-secondary">Store</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Owner</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Category</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Products</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Status</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Verification</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Listing Limit</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Created</th>
+                        <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {storeRows}
+                    </tbody>
+                  </table>
+                </div>
+
+                {total > limit && (
+                  <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <span className="text-sm text-text-secondary">
+                      Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} stores
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                        disabled={page === 1 || loading}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage((p: number) => Math.min(Math.ceil(total / limit), p + 1))}
+                        disabled={page === Math.ceil(total / limit) || loading}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
