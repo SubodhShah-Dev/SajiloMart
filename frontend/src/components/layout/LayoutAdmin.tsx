@@ -45,13 +45,13 @@ export const LayoutAdmin = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 md:relative md:shadow-none md:border-r`}
       >
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
+            <Shield className="h-7 w-7 text-primary" />
             <span className="text-sm font-bold text-text-primary tracking-tight uppercase">Admin</span>
           </div>
           <button className="md:hidden p-2 text-text-secondary hover:text-text-primary" onClick={() => setSidebarOpen(false)}>
@@ -59,7 +59,7 @@ export const LayoutAdmin = () => {
           </button>
         </div>
 
-        <nav className="p-4 space-y-1" aria-label="Admin navigation">
+        <nav className="p-4 space-y-0.5" aria-label="Admin navigation">
           {sidebarItems.map((item) => {
             return (
               <NavLink
@@ -67,7 +67,7 @@ export const LayoutAdmin = () => {
                 to={item.to}
                 end={item.label === "Stores"}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-primary-light text-primary"
                       : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
@@ -100,12 +100,12 @@ export const LayoutAdmin = () => {
 
       {/* Main content */}
       <div
-        className={`flex-1 transition-all duration-300 md:pl-64 ${
+        className={`flex-1 transition-all duration-300 md:pl-[280px] ${
           sidebarOpen ? "pl-0 md:pl-0" : ""
         }`}
       >
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 py-4 md:px-8">
+        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               className="md:hidden p-2 text-text-secondary hover:text-text-primary"
@@ -113,18 +113,18 @@ export const LayoutAdmin = () => {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h1 className="text-xl font-bold text-text-primary">
+            <h1 className="text-lg font-bold text-text-primary md:text-xl">
               {sidebarItems.find((i) => isActive(i.to))?.label || "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden sm:block text-sm text-text-muted">{user?.role}</span>
+            <span className="hidden sm:block text-xs text-text-muted">{user?.role}</span>
             <span className="w-2 h-2 rounded-full bg-success"></span>
             <p className="hidden sm:block text-sm text-text-primary">{user?.name}</p>
           </div>
         </header>
 
-        <main className="p-4 md:p-8"><Outlet /></main>
+        <main className="p-4 md:p-6 lg:p-8"><Outlet /></main>
       </div>
     </div>
   );
