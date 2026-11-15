@@ -309,12 +309,9 @@ export const AdminDashboard = () => {
             onSearch={handleSearch}
             onVerificationStatusChange={handleVerificationStatusChange}
             onStatusChange={handleStatusChange}
-            onLimitChange={handleLimitChange}
             search={search}
             verificationStatus={verificationStatus}
             status={status}
-            limit={limit}
-            total={total}
           />
 
           {selectedKeys.size > 0 && (
