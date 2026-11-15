@@ -82,15 +82,19 @@ export const LayoutAdmin = () => {
           })}
         </nav>
 
-        <div className="mt-auto p-6 border-t border-border">
-          <div className="px-2 py-1">
+        <div className="mt-auto p-4 border-t border-border">
+          <div className="px-2 py-2">
             <p className="text-xs font-medium text-text-primary">{user?.name}</p>
             <p className="text-xs text-text-muted truncate">{user?.email}</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">{user?.role}</p>
           </div>
           <Button
-            variant="outline"
-            onClick={() => logout()}
+            variant="danger"
+            onClick={() => {
+              if (window.confirm("Are you sure you want to sign out?")) {
+                logout();
+              }
+            }}
             className="w-full"
             leftIcon={<LogOut className="h-4 w-4" />}
           >
