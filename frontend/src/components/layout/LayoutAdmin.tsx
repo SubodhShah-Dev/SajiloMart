@@ -22,14 +22,14 @@ export const LayoutAdmin = () => {
         </div>
         <div className="flex items-center gap-4">
           {/* User identity group */}
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:block text-xs text-text-muted">{user?.role}</span>
+          <div className="flex items-center gap-2 bg-surface/50 rounded-lg px-3 py-1.5 border border-surface-hover">
             <span className="w-2 h-2 rounded-full bg-success"></span>
             <p className="hidden sm:block text-sm font-medium text-text-primary">{user?.name}</p>
+            <span className="hidden sm:block text-[10px] text-text-muted uppercase tracking-wider">{user?.role}</span>
           </div>
-          {/* Signout action - separated from identity group */}
+          {/* Signout action - matches the group styling */}
           <Button
-            variant="danger"
+            variant="outline"
             size="sm"
             onClick={() => {
               if (window.confirm("Are you sure you want to sign out?")) {
