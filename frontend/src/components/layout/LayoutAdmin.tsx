@@ -44,11 +44,11 @@ export const LayoutAdmin = () => {
       {/* Mobile sidebar overlay */}
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
 
-      {/* Sidebar */}
+      {/* Sidebar: fixed on mobile, relative on desktop (takes up space in flex flow) */}
       <aside
-        className={`shrink-0 fixed inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border transform transition-transform duration-300 ${
+        className={`inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 md:relative md:shadow-none md:border-r`}
+        } md:relative md:shadow-none md:border-r md:translate-x-0`}
       >
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-2">
@@ -99,14 +99,10 @@ export const LayoutAdmin = () => {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div
-        className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 md:pl-[280px] ${
-          sidebarOpen ? "pl-0 md:pl-0" : ""
-        }`}
-      >
+      {/* Main content: flex-1 fills remaining space after sidebar. No extra left padding needed since sidebar is relative on desktop. */}
+      <div className="flex-1 min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between min-w-0 px-4 py-3 md:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between min-w-0 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               className="md:hidden p-2 text-text-secondary hover:text-text-primary"
@@ -125,7 +121,7 @@ export const LayoutAdmin = () => {
           </div>
         </header>
 
-        <main className="min-w-0 p-4 md:p-6 lg:p-8">
+        <main className="min-w-0 p-4 sm:p-6 lg:p-8">
           <AdminToastProvider>
             <Outlet />
           </AdminToastProvider>
