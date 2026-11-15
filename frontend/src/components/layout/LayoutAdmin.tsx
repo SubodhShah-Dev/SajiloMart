@@ -20,10 +20,14 @@ export const LayoutAdmin = () => {
             Admin Dashboard
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden sm:block text-xs text-text-muted">{user?.role}</span>
-          <span className="w-2 h-2 rounded-full bg-success"></span>
-          <p className="hidden sm:block text-sm text-text-primary">{user?.name}</p>
+        <div className="flex items-center gap-4">
+          {/* User identity group */}
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:block text-xs text-text-muted">{user?.role}</span>
+            <span className="w-2 h-2 rounded-full bg-success"></span>
+            <p className="hidden sm:block text-sm font-medium text-text-primary">{user?.name}</p>
+          </div>
+          {/* Signout action - separated from identity group */}
           <Button
             variant="danger"
             size="sm"
