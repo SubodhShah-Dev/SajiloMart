@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { Button } from "../ui";
 import type { RootState } from "../../store";
 import { useLogout } from "../../hooks/useLogout";
+import { AdminToastProvider } from "../admin";
 
 interface SidebarItem {
   label: string;
@@ -124,7 +125,11 @@ export const LayoutAdmin = () => {
           </div>
         </header>
 
-        <main className="min-w-0 p-4 md:p-6 lg:p-8"><Outlet /></main>
+        <main className="min-w-0 p-4 md:p-6 lg:p-8">
+          <AdminToastProvider>
+            <Outlet />
+          </AdminToastProvider>
+        </main>
       </div>
     </div>
   );

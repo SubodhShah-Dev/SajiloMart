@@ -5,7 +5,7 @@ import Layout from "./components/Layout";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { RequireAdmin } from "./components/auth/RequireAdmin";
 import { useAuthBootstrap } from "./hooks/useAuthBootstrap";
-import { AdminPage } from "./pages/Admin";
+import { AdminDashboard, AdminEmptyState } from "./pages/admin";
 import { LayoutAdmin } from "./components/layout/LayoutAdmin";
 import { CartPage } from "./pages/CartPage";
 import Home from "./pages/Home";
@@ -83,12 +83,12 @@ const App = () => {
 
         <Route element={<LayoutAdmin />}>
           <Route element={<RequireAdmin />}>
-            <Route index element={<AdminPage />} />
-            <Route path="users" element={<div className="p-8 text-text-secondary">User Management - Coming Soon</div>} />
-            <Route path="products" element={<div className="p-8 text-text-secondary">Product Management - Coming Soon</div>} />
-            <Route path="orders" element={<div className="p-8 text-text-secondary">Order Management - Coming Soon</div>} />
-            <Route path="analytics" element={<div className="p-8 text-text-secondary">Analytics - Coming Soon</div>} />
-            <Route path="settings" element={<div className="p-8 text-text-secondary">Platform Settings - Coming Soon</div>} />
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminEmptyState title="User Management" message="Coming soon" variant="filter" />} />
+            <Route path="products" element={<AdminEmptyState title="Product Management" message="Coming soon" variant="filter" />} />
+            <Route path="orders" element={<AdminEmptyState title="Order Management" message="Coming soon" variant="filter" />} />
+            <Route path="analytics" element={<AdminEmptyState title="Analytics" message="Coming soon" variant="filter" />} />
+            <Route path="settings" element={<AdminEmptyState title="Platform Settings" message="Coming soon" variant="filter" />} />
           </Route>
         </Route>
       </Routes>
