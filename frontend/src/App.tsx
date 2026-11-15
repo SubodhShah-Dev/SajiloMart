@@ -77,19 +77,19 @@ const App = () => {
             />
           </Route>
 
-          <Route element={<RequireAdmin />}>
-            <Route element={<LayoutAdmin />}>
-              <Route index element={<AdminPage />} />
-              <Route path="users" element={<div className="p-8 text-text-secondary">User Management - Coming Soon</div>} />
-              <Route path="products" element={<div className="p-8 text-text-secondary">Product Management - Coming Soon</div>} />
-              <Route path="orders" element={<div className="p-8 text-text-secondary">Order Management - Coming Soon</div>} />
-              <Route path="analytics" element={<div className="p-8 text-text-secondary">Analytics - Coming Soon</div>} />
-              <Route path="settings" element={<div className="p-8 text-text-secondary">Platform Settings - Coming Soon</div>} />
-            </Route>
-          </Route>
-
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="*" element={<NotFound />} />
+        </Route>
+
+        <Route element={<LayoutAdmin />}>
+          <Route element={<RequireAdmin />}>
+            <Route index element={<AdminPage />} />
+            <Route path="users" element={<div className="p-8 text-text-secondary">User Management - Coming Soon</div>} />
+            <Route path="products" element={<div className="p-8 text-text-secondary">Product Management - Coming Soon</div>} />
+            <Route path="orders" element={<div className="p-8 text-text-secondary">Order Management - Coming Soon</div>} />
+            <Route path="analytics" element={<div className="p-8 text-text-secondary">Analytics - Coming Soon</div>} />
+            <Route path="settings" element={<div className="p-8 text-text-secondary">Platform Settings - Coming Soon</div>} />
+          </Route>
         </Route>
       </Routes>
     </div>

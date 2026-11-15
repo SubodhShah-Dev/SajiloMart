@@ -45,7 +45,7 @@ export const LayoutAdmin = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border transform transition-transform duration-300 ${
+        className={`shrink-0 fixed inset-y-0 left-0 z-50 w-[280px] bg-surface border-r border-border transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 md:relative md:shadow-none md:border-r`}
       >
@@ -100,12 +100,12 @@ export const LayoutAdmin = () => {
 
       {/* Main content */}
       <div
-        className={`flex-1 transition-all duration-300 md:pl-[280px] ${
+        className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 md:pl-[280px] ${
           sidebarOpen ? "pl-0 md:pl-0" : ""
         }`}
       >
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between min-w-0 px-4 py-3 md:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               className="md:hidden p-2 text-text-secondary hover:text-text-primary"
@@ -124,7 +124,7 @@ export const LayoutAdmin = () => {
           </div>
         </header>
 
-        <main className="p-4 md:p-6 lg:p-8"><Outlet /></main>
+        <main className="min-w-0 p-4 md:p-6 lg:p-8"><Outlet /></main>
       </div>
     </div>
   );
