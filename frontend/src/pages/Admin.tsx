@@ -1,81 +1,27 @@
 import { useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import {
-  Users,
   Store,
-  Package,
-  DollarSign,
-  TrendingUp,
   Shield,
   BarChart3,
   Settings,
   Eye,
-  Edit,
-  Flag,
-  XCircle,
   Clock,
   Download,
-  ArrowRight,
   Search,
   MoreVertical,
   ShieldCheck,
   ShieldAlert,
   Ban,
   UserCheck,
+  XCircle,
 } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, type BadgeProps, Input, Select } from "../components/ui";
 import { useSelector as useSelectorRedux } from "react-redux";
 import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { RootState } from "../store";
 import { adminSuspendStore, adminUnsuspendStore, adminVerifyStore, adminRejectStore, getAdminStores, type AdminStoreSummary } from "../services/api";
-
-interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: "CUSTOMER" | "VENDOR" | "ADMIN";
-  status: "active" | "suspended" | "pending";
-  joined: string;
-  orders: number;
-}
-
-const mockUsers: AdminUser[] = [
-  { id: "1", name: "John Doe", email: "john@example.com", role: "CUSTOMER", status: "active", joined: "2024-01-15", orders: 12 },
-  { id: "2", name: "Jane Smith", email: "jane@example.com", role: "CUSTOMER", status: "active", joined: "2024-01-10", orders: 8 },
-  { id: "3", name: "Bob Wilson", email: "bob@example.com", role: "VENDOR", status: "active", joined: "2023-12-20", orders: 0 },
-  { id: "4", name: "Alice Brown", email: "alice@example.com", role: "CUSTOMER", status: "suspended", joined: "2024-01-05", orders: 3 },
-  { id: "5", name: "Charlie Davis", email: "charlie@example.com", role: "VENDOR", status: "pending", joined: "2024-01-18", orders: 0 },
-];
-
-const getUserRoleBadge = (role: AdminUser["role"]) => {
-  const config: Record<AdminUser["role"], { variant: BadgeProps["variant"]; label: string }> = {
-    CUSTOMER: { variant: "default", label: "Customer" },
-    VENDOR: { variant: "primary", label: "Vendor" },
-    ADMIN: { variant: "secondary", label: "Admin" },
-  };
-  const c = config[role];
-  return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
-};
-
-const getUserStatusBadge = (status: AdminUser["status"]) => {
-  const config: Record<AdminUser["status"], { variant: BadgeProps["variant"]; label: string }> = {
-    active: { variant: "success", label: "Active" },
-    suspended: { variant: "danger", label: "Suspended" },
-    pending: { variant: "warning", label: "Pending" },
-  };
-  const c = config[status];
-  return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
-};
-
-const getStoreStatusBadge = (status: AdminStoreSummary["status"]) => {
-  const config: Record<AdminStoreSummary["status"], { variant: BadgeProps["variant"]; label: string }> = {
-    PENDING: { variant: "warning", label: "Pending" },
-    APPROVED: { variant: "success", label: "Approved" },
-    SUSPENDED: { variant: "danger", label: "Suspended" },
-  };
-  const c = config[status];
-  return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
-};
 
 const getVerificationStatusBadge = (status: AdminStoreSummary["verificationStatus"]) => {
   const config: Record<AdminStoreSummary["verificationStatus"], { variant: BadgeProps["variant"]; label: string; icon: React.ReactNode }> = {
@@ -86,6 +32,16 @@ const getVerificationStatusBadge = (status: AdminStoreSummary["verificationStatu
   };
   const c = config[status];
   return <Badge variant={c.variant} size="sm" className="gap-1">{c.icon}{c.label}</Badge>;
+};
+
+const getStoreStatusBadge = (status: AdminStoreSummary["status"]) => {
+  const config: Record<AdminStoreSummary["status"], { variant: BadgeProps["variant"]; label: string }> = {
+    PENDING: { variant: "warning", label: "Pending" },
+    APPROVED: { variant: "success", label: "Approved" },
+    SUSPENDED: { variant: "danger", label: "Suspended" },
+  };
+  const c = config[status];
+  return <Badge variant={c.variant} size="sm">{c.label}</Badge>;
 };
 
 export const AdminPage = () => {
@@ -122,6 +78,14 @@ export const AdminPage = () => {
       setLoading(false);
     }
   }, [page, limit, statusFilter, verificationFilter, search]);
+
+  // Chart data from real store data
+  const verificationChartData = [
+    { name: "Unverified", count: stores.filter((s) => s.verificationStatus === "UNVERIFIED").length },
+    { name: "Pending", count: stores.filter((s) => s.verificationStatus === "PENDING").length },
+    { name: "Verified", count: stores.filter((s) => s.verificationStatus === "VERIFIED").length },
+    { name: "Rejected", count: stores.filter((s) => s.verificationStatus === "REJECTED").length },
+  ];
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -250,13 +214,6 @@ export const AdminPage = () => {
     );
   }
 
-  const stats = [
-    { label: "Total Users", value: "12,450", change: "+12.5%", icon: Users },
-    { label: "Active Vendors", value: "342", change: "+8%", icon: Store },
-    { label: "Total Orders", value: "8,934", change: "+15%", icon: Package },
-    { label: "Revenue (Month)", value: "$245,670", change: "+22%", icon: DollarSign },
-  ];
-
   const storeRows = stores.length === 0 ? (
     <tr>
       <td colSpan={9} className="p-8 text-center text-text-secondary">No stores found</td>
@@ -366,70 +323,27 @@ export const AdminPage = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.label} variant="outlined" hoverable>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-text-secondary">{stat.label}</p>
-                    <p className="text-2xl font-bold text-text-primary mt-1">{stat.value}</p>
-                    <p className="text-sm text-success mt-1">{stat.change} vs last month</p>
-                  </div>
-                  <div className="p-3 bg-primary-light rounded-xl text-primary">
-                    <stat.icon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card variant="outlined" className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" aria-hidden="true" /> Stores by Verification Status</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={verificationChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" fill="#58A6FF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-8 lg:grid-cols-2 mb-8">
-          <Card variant="outlined">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" aria-hidden="true" /> User Management</CardTitle>
-              <NavLink to="/admin/users" className="text-sm text-primary hover:text-primary-hover">View All</NavLink>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left p-4 font-medium text-text-secondary">User</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Role</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Status</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Joined</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Orders</th>
-                      <th className="text-left p-4 font-medium text-text-secondary">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {mockUsers.map((user) => (
-                      <tr key={user.id} className="hover:bg-surface-hover">
-                        <td className="p-4">
-                          <div className="font-medium text-text-primary">{user.name}</div>
-                          <div className="text-sm text-text-secondary">{user.email}</div>
-                        </td>
-                        <td className="p-4">{getUserRoleBadge(user.role)}</td>
-                        <td className="p-4">{getUserStatusBadge(user.status)}</td>
-                        <td className="p-4 text-sm text-text-secondary">{user.joined}</td>
-                        <td className="p-4 text-sm text-text-secondary">{user.orders}</td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0" aria-label="View user" />
-                            <Button variant="ghost" size="sm" leftIcon={<Edit className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0" aria-label="Edit user" />
-                            <Button variant="ghost" size="sm" leftIcon={<Flag className="h-4 w-4" aria-hidden="true" />} className="h-8 w-8 p-0 text-accent hover:bg-accent/10" aria-label="Flag user" />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card variant="outlined">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2"><Store className="h-5 w-5" aria-hidden="true" /> Sellers</CardTitle>
@@ -491,7 +405,7 @@ export const AdminPage = () => {
               ) : (
                 <>
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="min-w-full">
                       <thead>
                         <tr className="border-b border-border">
                           <th className="text-left p-4 font-medium text-text-secondary">Store</th>
@@ -538,60 +452,6 @@ export const AdminPage = () => {
                   )}
                 </>
               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-2 mb-8">
-          <Card variant="outlined">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" aria-hidden="true" /> Product Moderation</CardTitle>
-              <Badge variant="danger" size="sm">0 Flagged</Badge>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="p-8 text-center">
-                <Shield className="h-12 w-12 text-text-muted mx-auto mb-4" />
-                <p className="text-text-secondary mb-4">Product moderation coming soon</p>
-                <Badge variant="default" size="sm">Coming soon</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" aria-hidden="true" /> Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <NavLink to="/admin/users" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Users className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Manage All Users</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/admin/sellers" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Store className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Seller Management</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/admin/products" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Package className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Product Moderation</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/admin/orders" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Package className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Order Oversight</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/admin/analytics" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Analytics & Reports</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
-              <NavLink to="/admin/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-hover transition-colors">
-                <Settings className="h-5 w-5 text-primary" aria-hidden="true" />
-                <span className="text-text-primary">Platform Settings</span>
-                <ArrowRight className="h-4 w-4 text-text-muted ml-auto" aria-hidden="true" />
-              </NavLink>
             </CardContent>
           </Card>
         </div>

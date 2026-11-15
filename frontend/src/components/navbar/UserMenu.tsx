@@ -9,6 +9,7 @@ import {
   Settings,
   ChevronDown,
   Store,
+  Shield,
 } from "lucide-react";
 import { Button } from "../ui";
 import { useSelector } from "react-redux";
@@ -42,6 +43,10 @@ const authItems: MenuItem[] = [
 
 const vendorItems: MenuItem[] = [
   { label: "Seller Dashboard", to: "/seller", icon: Store },
+];
+
+const adminItems: MenuItem[] = [
+  { label: "Admin Dashboard", to: "/admin", icon: Shield },
 ];
 
 export const UserMenu = ({
@@ -101,8 +106,11 @@ export const UserMenu = ({
 
   const getItems = () => {
     if (!isAuthenticated) return guestItems;
-    if (userRole === "VENDOR" || userRole === "ADMIN") {
+    if (userRole === "VENDOR") {
       return [...authItems, ...vendorItems];
+    }
+    if (userRole === "ADMIN") {
+      return [...authItems, ...adminItems];
     }
     return authItems;
   };
