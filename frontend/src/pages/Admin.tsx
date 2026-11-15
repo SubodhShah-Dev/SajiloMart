@@ -198,29 +198,24 @@ export const AdminPage = () => {
 
   const storeRows = stores.length === 0 ? (
     <tr>
-      <td colSpan={9} className="p-8 text-center text-text-secondary">No stores found</td>
+      <td colSpan={7} className="p-8 text-center text-text-secondary">No stores found</td>
     </tr>
   ) : (
     stores.map((store: AdminStoreSummary) => (
       <tr key={store.id} className="hover:bg-surface-hover">
         <td className="p-4">
-          <div className="font-medium text-text-primary">{store.name}</div>
-          <div className="text-sm text-text-secondary">{store.slug}</div>
+          <div className="font-medium text-text-primary truncate max-w-[160px]">{store.name}</div>
+          <div className="text-sm text-text-secondary truncate max-w-[160px]">{store.slug}</div>
         </td>
         <td className="p-4">
-          <div className="font-medium text-text-primary">{store.owner.name}</div>
-          <div className="text-sm text-text-secondary">@{store.owner.username} • {store.owner.email}</div>
+          <div className="font-medium text-text-primary truncate max-w-[140px]">{store.owner.name}</div>
+          <div className="text-sm text-text-secondary truncate max-w-[140px]">{store.owner.username}</div>
+          <div className="text-sm text-text-secondary truncate max-w-[140px]">{store.owner.email}</div>
         </td>
-        <td className="p-4 text-sm text-text-secondary">{store.category ?? "N/A"}</td>
+        <td className="p-4 text-sm text-text-secondary truncate max-w-[120px]">{store.category ?? "N/A"}</td>
         <td className="p-4 text-sm text-text-secondary">{store.productCount}</td>
         <td className="p-4">{getStoreStatusBadge(store.status)}</td>
         <td className="p-4">{getVerificationStatusBadge(store.verificationStatus)}</td>
-        <td className="p-4 text-sm text-text-secondary">
-          {store.listingLimit !== null ? store.listingLimit : "Unlimited"}
-        </td>
-        <td className="p-4 text-sm text-text-secondary">
-          {new Date(store.createdAt).toLocaleDateString()}
-        </td>
         <td className="p-4">
           <div className="relative inline-block">
             <Button
@@ -458,8 +453,6 @@ export const AdminPage = () => {
                       <th className="text-center px-5 py-4 font-medium text-text-secondary">Products</th>
                       <th className="text-center px-5 py-4 font-medium text-text-secondary">Status</th>
                       <th className="text-center px-5 py-4 font-medium text-text-secondary">Verification</th>
-                      <th className="text-center px-5 py-4 font-medium text-text-secondary">Listing Limit</th>
-                      <th className="text-center px-5 py-4 font-medium text-text-secondary">Created</th>
                       <th className="text-center px-5 py-4 font-medium text-text-secondary">Actions</th>
                     </tr>
                   </thead>
