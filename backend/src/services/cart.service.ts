@@ -134,26 +134,33 @@ export async function addItem(userId: string, productId: string, quantity: numbe
 
     const cart = await getOrCreateCart(manager, userId);
 
-    let cartItem = cart.items.find(
-      (item) => item.productId === productId && !item.isRemoved,
-    );
+    // The (cart_id, product_id) pair is unique, so a soft-deleted row (for
+    // example after checkout) must be restored instead of inserted again.
+    const existingItem = await manager.findOne(CartItem, {
+      where: { cartId: cart.id, productId },
+    });
 
-    if (cartItem) {
-      const newQuantity = cartItem.quantity + quantity;
+    if (existingItem && !existingItem.isRemoved) {
+      const newQuantity = existingItem.quantity + quantity;
       if (totalStock < newQuantity) {
         throw new AppError("Insufficient stock", 400);
       }
-      cartItem.quantity = newQuantity;
-      await manager.save(cartItem);
+      existingItem.quantity = newQuantity;
+      await manager.save(existingItem);
+    } else if (existingItem) {
+      existingItem.isRemoved = false;
+      existingItem.deletedAt = null;
+      existingItem.quantity = quantity;
+      await manager.save(existingItem);
     } else {
-      cartItem = manager.create(CartItem, {
-        cartId: cart.id,
-        productId,
-        quantity,
-        isRemoved: false,
-      });
-      await manager.save(cartItem);
-      cart.items.push(cartItem);
+      await manager.save(
+        manager.create(CartItem, {
+          cartId: cart.id,
+          productId,
+          quantity,
+          isRemoved: false,
+        }),
+      );
     }
 
     const updatedCart = await manager.findOne(Cart, {

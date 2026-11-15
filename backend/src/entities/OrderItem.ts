@@ -11,6 +11,7 @@ import {
   Index,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { Order } from "./Order.js";
 import { Product } from "./Product.js";
 
@@ -30,7 +31,7 @@ export class OrderItem {
 
   @ManyToOne(() => Order, (order) => order.items, { onDelete: "CASCADE" })
   @JoinColumn({ name: "order_id" })
-  order!: Order;
+  order!: Relation<Order>;
 
   @Column({ name: "product_id", type: "varchar", length: 36 })
   productId!: string;
@@ -39,7 +40,7 @@ export class OrderItem {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "product_id" })
-  product!: Product;
+  product!: Relation<Product>;
 
   @Column({ type: "int", unsigned: true })
   quantity!: number;

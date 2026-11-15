@@ -125,7 +125,39 @@ function parseBackendUrl(value: string | undefined, nodeEnv: NodeEnv): string {
   }
 }
 
+function parseOptionalString(value: string | undefined): string | undefined {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+
+  return value;
+}
+
+function assertStripeTestKey(
+  secretKey: string | undefined,
+  nodeEnv: NodeEnv,
+): void {
+  if (nodeEnv === "production" || secretKey === undefined) {
+    return;
+  }
+
+  if (!secretKey.startsWith("sk_test_")) {
+    throw new Error(
+      'STRIPE_SECRET_KEY must start with "sk_test_" outside production. Live keys are never used in development or test.',
+    );
+  }
+}
+
 const nodeEnv = parseNodeEnv(process.env.NODE_ENV);
+const stripeSecretKey = parseOptionalString(process.env.STRIPE_SECRET_KEY);
+const stripePublishableKey = parseOptionalString(
+  process.env.STRIPE_PUBLISHABLE_KEY,
+);
+const stripeWebhookSecret = parseOptionalString(
+  process.env.STRIPE_WEBHOOK_SECRET,
+);
+
+assertStripeTestKey(stripeSecretKey, nodeEnv);
 
 export const env = Object.freeze({
   nodeEnv,
@@ -152,5 +184,15 @@ export const env = Object.freeze({
     process.env.SELLER_UNVERIFIED_LISTING_LIMIT,
     5,
     "SELLER_UNVERIFIED_LISTING_LIMIT",
+  ),
+  stripeSecretKey,
+  stripePublishableKey,
+  stripeWebhookSecret,
+  // Stripe refuses card sessions worth less than about US$0.50. Keep this
+  // comfortably above that floor (roughly NPR 73 today) so normal carts pass.
+  stripeMinOrderTotalNpr: parsePositiveInt(
+    process.env.STRIPE_MIN_ORDER_TOTAL_NPR,
+    100,
+    "STRIPE_MIN_ORDER_TOTAL_NPR",
   ),
 });

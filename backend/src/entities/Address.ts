@@ -9,6 +9,7 @@ import {
   Index,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 import { District } from "./District.js";
 
@@ -26,7 +27,7 @@ export class Address {
 
   @ManyToOne(() => User, (user) => user.addresses, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({ type: "varchar", length: 50, default: "Home" })
   label!: string;
@@ -51,7 +52,7 @@ export class Address {
 
   @ManyToOne(() => District, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "district_id" })
-  district!: District;
+  district!: Relation<District>;
 
   @Column({ name: "is_default", type: "boolean", default: false })
   isDefault!: boolean;

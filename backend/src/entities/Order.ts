@@ -12,6 +12,7 @@ import {
   Check,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 import { OrderItem } from "./OrderItem.js";
 import { Payment } from "./Payment.js";
@@ -43,7 +44,7 @@ export class Order {
 
   @ManyToOne(() => User, (user) => user.orders, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({
     type: "enum",
@@ -55,7 +56,7 @@ export class Order {
   @OneToOne(() => Payment, (payment) => payment.order, {
     cascade: ["insert", "update"],
   })
-  payment!: Payment;
+  payment!: Relation<Payment>;
 
   @Column({ name: "payment_method", type: "enum", enum: ["COD", "STRIPE"] })
   paymentMethod!: "COD" | "STRIPE";

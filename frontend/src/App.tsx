@@ -11,6 +11,8 @@ import Home from "./pages/Home";
 import { LogoutPage } from "./pages/LogoutPage";
 import NotFound from "./pages/NotFound";
 import { OrdersPage } from "./pages/OrdersPage";
+import { OrderDetailPage } from "./pages/OrderDetailPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
 import { ProductDetailPage } from "./pages/product/ProductDetailPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SellerPage } from "./pages/seller/SellerPage";
@@ -60,6 +62,8 @@ const App = () => {
           <Route element={<RequireAuth />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/sell" element={<Navigate to="/seller" replace />} />

@@ -10,6 +10,7 @@ import {
   Unique,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 
 @Entity("refresh_sessions")
@@ -26,7 +27,7 @@ export class RefreshSession {
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({ name: "token_hash", type: "char", length: 64 })
   tokenHash!: string;

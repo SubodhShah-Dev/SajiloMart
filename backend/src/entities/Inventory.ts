@@ -11,6 +11,7 @@ import {
   Index,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { Product } from "./Product.js";
 
 @Entity("inventory")
@@ -29,7 +30,7 @@ export class Inventory {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "product_id" })
-  product!: Product;
+  product!: Relation<Product>;
 
   @Column({ name: "total_stock", type: "int", default: 0, unsigned: true })
   totalStock!: number;

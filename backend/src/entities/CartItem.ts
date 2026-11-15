@@ -11,6 +11,7 @@ import {
   Index,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { Cart } from "./Cart.js";
 import { Product } from "./Product.js";
 
@@ -28,14 +29,14 @@ export class CartItem {
 
   @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "cart_id" })
-  cart!: Cart;
+  cart!: Relation<Cart>;
 
   @Column({ name: "product_id", type: "varchar", length: 36 })
   productId!: string;
 
   @ManyToOne(() => Product, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "product_id" })
-  product!: Product;
+  product!: Relation<Product>;
 
   @Column({ type: "int", unsigned: true })
   quantity!: number;

@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, Unique, Index, OneToMany, BeforeUpdate, ManyToOne } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 import { Product } from "./Product.js";
 
@@ -17,7 +18,7 @@ export class Store {
 
   @OneToOne(() => User, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "owner_id" })
-  owner!: User;
+  owner!: Relation<User>;
 
   @Column({ type: "varchar", length: 150 })
   name!: string;

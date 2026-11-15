@@ -12,6 +12,7 @@ import {
   Check,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { Store } from "./Store.js";
 import { Inventory } from "./Inventory.js";
 import { OrderItem } from "./OrderItem.js";
@@ -46,7 +47,7 @@ export class Product {
 
   @ManyToOne(() => Store, (store) => store.products)
   @JoinColumn({ name: "store_id" })
-  store!: Store;
+  store!: Relation<Store>;
 
   @Column({ name: "is_removed", type: "boolean", default: false })
   isRemoved!: boolean;
@@ -55,7 +56,7 @@ export class Product {
   deletedAt!: Date | null;
 
   @OneToOne(() => Inventory, (inventory) => inventory.product)
-  inventory!: Inventory;
+  inventory!: Relation<Inventory>;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
   orderItems!: OrderItem[];

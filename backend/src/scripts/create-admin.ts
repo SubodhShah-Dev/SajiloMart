@@ -73,4 +73,17 @@ async function main() {
   console.log("Admin user created successfully");
 }
 
-void main();
+void main()
+  .catch((error: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error(
+      "Failed to create admin:",
+      error instanceof Error ? error.message : error,
+    );
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    if (AppDataSource.isInitialized) {
+      await AppDataSource.destroy();
+    }
+  });

@@ -84,7 +84,11 @@ interface ApiFailure {
   };
 }
 
-const DEFAULT_API_BASE_URL = "http://localhost:5000";
+// Dev falls back to the local API; production builds default to a relative base
+// so the SPA works when served from the same origin as the API.
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? "http://localhost:4000"
+  : "";
 
 const apiBaseUrl = (
   import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL
@@ -605,4 +609,130 @@ export async function adminRejectStore(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+export interface District {
+  id: string;
+  name: string;
+  province: string;
+}
+
+export interface Address {
+  id: string;
+  label: string;
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  districtId: string;
+  district: {
+    id: string;
+    name: string;
+    province: string;
+  };
+  isDefault: boolean;
+}
+
+export interface CreateAddressInput {
+  label?: string;
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  districtId: string;
+  isDefault?: boolean;
+}
+
+export async function getDistricts(): Promise<District[]> {
+  return apiRequest<District[]>("/api/districts");
+}
+
+export async function getAddresses(): Promise<Address[]> {
+  return apiRequest<Address[]>("/api/addresses");
+}
+
+export async function createAddress(input: CreateAddressInput): Promise<Address> {
+  return apiRequest<Address>("/api/addresses", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PARTIAL"
+  | "FULFILLED"
+  | "CANCELLED";
+
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+
+export type PaymentMethod = "COD" | "STRIPE";
+
+export interface ShippingAddressSnapshot {
+  recipientName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  district: string;
+  province: string;
+}
+
+export interface OrderItemView {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPriceAtPurchase: string;
+  lineTotal: string;
+}
+
+export interface OrderDetail {
+  id: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  subtotal: string;
+  shippingFee: string;
+  total: string;
+  shippingAddress: ShippingAddressSnapshot;
+  createdAt: string;
+  items: OrderItemView[];
+}
+
+export interface CheckoutInput {
+  addressId: string;
+  paymentMethod: PaymentMethod;
+}
+
+export async function checkout(input: CheckoutInput): Promise<OrderDetail> {
+  return apiRequest<OrderDetail>("/api/orders", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getOrders(): Promise<OrderDetail[]> {
+  return apiRequest<OrderDetail[]>("/api/orders");
+}
+
+export async function getOrder(orderId: string): Promise<OrderDetail> {
+  return apiRequest<OrderDetail>(`/api/orders/${encodeURIComponent(orderId)}`);
+}
+
+export interface StripeSessionView {
+  id: string;
+  url: string;
+  expiresAt: number;
+}
+
+export async function createStripeSession(
+  orderId: string,
+): Promise<StripeSessionView> {
+  return apiRequest<StripeSessionView>(
+    `/api/payments/stripe/${encodeURIComponent(orderId)}/session`,
+    { method: "POST" },
+  );
 }

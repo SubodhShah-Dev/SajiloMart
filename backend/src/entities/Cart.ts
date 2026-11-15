@@ -11,6 +11,7 @@ import {
   Index,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 import { CartItem } from "./CartItem.js";
 
@@ -27,7 +28,7 @@ export class Cart {
 
   @OneToOne(() => User, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cart, { cascade: true })
   items!: CartItem[];

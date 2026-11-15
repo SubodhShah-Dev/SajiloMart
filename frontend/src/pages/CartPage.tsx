@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Trash2, Plus, Minus, ArrowLeft, CreditCard } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Input } from "../components/ui";
 import type { CartItem } from "../store/slices/cartSlice";
@@ -13,12 +13,13 @@ export const CartPage = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
+  // The backend has no tax or shipping policy yet, so the cart must show the
+  // same amount the order will actually be charged.
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const shipping = subtotal >= 50 ? 0 : 9.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal;
 
   // Fetch cart on mount for authenticated users
   useEffect(() => {
@@ -250,7 +251,7 @@ export const CartPage = () => {
                           </div>
 
                           <div className="text-right">
-                            <p className="text-lg font-bold text-text-primary">${(item.product.price * item.quantity).toFixed(2)}</p>
+                            <p className="text-lg font-bold text-text-primary">Rs {(item.product.price * item.quantity).toFixed(2)}</p>
                           </div>
                         </div>
                       </div>
@@ -276,25 +277,18 @@ export const CartPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-text-secondary">Subtotal</span>
-                    <span className="font-medium text-text-primary">${subtotal.toFixed(2)}</span>
+                    <span className="font-medium text-text-primary">Rs {subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-text-secondary">Shipping</span>
-                    <span className="font-medium text-text-primary">{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
-                  </div>
-                  {shipping > 0 && (
-                    <p className="text-xs text-text-muted">Add ${(50 - subtotal).toFixed(2)} more for free shipping!</p>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Estimated Tax (8%)</span>
-                    <span className="font-medium text-text-primary">${tax.toFixed(2)}</span>
+                    <span className="font-medium text-text-primary">Free</span>
                   </div>
                 </div>
 
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-text-primary">Total</span>
-                    <span className="text-text-primary">${total.toFixed(2)}</span>
+                    <span className="text-text-primary">Rs {total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -303,6 +297,7 @@ export const CartPage = () => {
                   fullWidth
                   size="lg"
                   leftIcon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
+                  onClick={() => navigate("/checkout")}
                 >
                   Proceed to Checkout
                 </Button>

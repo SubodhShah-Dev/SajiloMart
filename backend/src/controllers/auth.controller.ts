@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 
 import { env } from "../config/env.js";
 import { AppDataSource } from "../config/data-source.js";
+import { logger } from "../config/logger.js";
 import { User } from "../entities/User.js";
 import { AppError } from "../errors/AppError.js";
 import {
@@ -15,6 +16,11 @@ import {
   toSafeUser,
   updateUserProfile,
 } from "../services/auth.service.js";
+import {
+  buildGoogleAuthUrl,
+  createGoogleOAuthClient,
+  exchangeGoogleCode,
+} from "../services/google-oauth.service.js";
 import { generateUniqueUsername } from "../utils/username.util.js";
 import {
   clearAuthCookies,
@@ -29,10 +35,6 @@ import type {
   RegisterInput,
   UpdateProfileInput,
 } from "../validation/auth.schema.js";
-
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
 function googleRedirect(error: string): string {
   return `${env.frontendUrl}/auth?error=${encodeURIComponent(error)}`;
@@ -116,9 +118,9 @@ export async function updateMe(request: Request, response: Response): Promise<vo
 }
 
 export function googleLogin(_request: Request, response: Response): void {
-  const googleClientId = env.googleClientId;
+  const client = createGoogleOAuthClient();
 
-  if (!googleClientId) {
+  if (!client) {
     response.status(500).json({
       success: false,
       error: { message: "Google OAuth is not configured." },
@@ -127,20 +129,10 @@ export function googleLogin(_request: Request, response: Response): void {
   }
 
   const state = randomBytes(32).toString("hex");
-  const callbackUrl = `${env.backendUrl}/api/auth/google/callback`;
 
   setGoogleStateCookie(response, state);
 
-  const authUrl = new URL(GOOGLE_AUTH_URL);
-  authUrl.searchParams.set("client_id", googleClientId);
-  authUrl.searchParams.set("redirect_uri", callbackUrl);
-  authUrl.searchParams.set("scope", "openid email profile");
-  authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("access_type", "offline");
-  authUrl.searchParams.set("prompt", "consent");
-  authUrl.searchParams.set("state", state);
-
-  response.redirect(authUrl.toString());
+  response.redirect(buildGoogleAuthUrl(client, state));
 }
 
 function stateMatches(expected: string, received: string): boolean {
@@ -184,49 +176,15 @@ export async function googleCallback(
   }
 
   const googleClientId = env.googleClientId;
-  const googleClientSecret = env.googleClientSecret;
+  const client = googleClientId ? createGoogleOAuthClient() : null;
 
-  if (!googleClientId || !googleClientSecret) {
+  if (!client || !googleClientId) {
     response.redirect(googleRedirect("oauth_not_configured"));
     return;
   }
 
   try {
-    const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: googleClientId,
-        client_secret: googleClientSecret,
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: `${env.backendUrl}/api/auth/google/callback`,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      throw new Error("Token exchange failed");
-    }
-
-    const tokenData = (await tokenResponse.json()) as { access_token: string };
-
-    const userInfoResponse = await fetch(GOOGLE_USERINFO_URL, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-
-    if (!userInfoResponse.ok) {
-      throw new Error("Failed to fetch Google profile");
-    }
-
-    const googleUser = (await userInfoResponse.json()) as {
-      sub: string;
-      email?: string;
-      email_verified?: boolean;
-      name?: string;
-      given_name?: string;
-      family_name?: string;
-      picture?: string;
-    };
+    const googleUser = await exchangeGoogleCode(client, code, googleClientId);
 
     if (!googleUser.email) {
       response.redirect(googleRedirect("no_email"));
@@ -297,7 +255,11 @@ export async function googleCallback(
 
     setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
     response.redirect(env.frontendUrl);
-  } catch {
+  } catch (error) {
+    // Log the reason only: never the authorization code, tokens, or secrets.
+    logger.error(
+      `Google OAuth callback failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
     response.redirect(googleRedirect("google_oauth_failed"));
   }
 }

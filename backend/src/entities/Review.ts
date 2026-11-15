@@ -11,6 +11,7 @@ import {
   Check,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { User } from "./User.js";
 import { Product } from "./Product.js";
 
@@ -29,7 +30,7 @@ export class Review {
 
   @ManyToOne(() => User, (user) => user.reviews, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({ name: "product_id", type: "varchar", length: 36 })
   productId!: string;
@@ -38,7 +39,7 @@ export class Review {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "product_id" })
-  product!: Product;
+  product!: Relation<Product>;
 
   @Column({ type: "tinyint", unsigned: true })
   rating!: number;

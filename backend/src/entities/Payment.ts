@@ -11,6 +11,7 @@ import {
   Unique,
   BeforeUpdate,
 } from "typeorm";
+import type { Relation } from "typeorm";
 import { Order } from "./Order.js";
 
 @Entity("payments")
@@ -28,7 +29,7 @@ export class Payment {
 
   @OneToOne(() => Order, (order) => order.payment, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "order_id" })
-  order!: Order;
+  order!: Relation<Order>;
 
   @Column({
     type: "decimal",
