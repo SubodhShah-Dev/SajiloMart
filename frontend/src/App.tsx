@@ -6,6 +6,7 @@ import { RequireAuth } from "./components/auth/RequireAuth";
 import { RequireAdmin } from "./components/auth/RequireAdmin";
 import { useAuthBootstrap } from "./hooks/useAuthBootstrap";
 import { AdminPage } from "./pages/Admin";
+import { LayoutAdmin } from "./components/layout/LayoutAdmin";
 import { CartPage } from "./pages/CartPage";
 import Home from "./pages/Home";
 import { LogoutPage } from "./pages/LogoutPage";
@@ -77,7 +78,14 @@ const App = () => {
           </Route>
 
           <Route element={<RequireAdmin />}>
-            <Route path="/admin/*" element={<AdminPage />} />
+            <Route element={<LayoutAdmin />}>
+              <Route index element={<AdminPage />} />
+              <Route path="users" element={<div className="p-8 text-text-secondary">User Management - Coming Soon</div>} />
+              <Route path="products" element={<div className="p-8 text-text-secondary">Product Management - Coming Soon</div>} />
+              <Route path="orders" element={<div className="p-8 text-text-secondary">Order Management - Coming Soon</div>} />
+              <Route path="analytics" element={<div className="p-8 text-text-secondary">Analytics - Coming Soon</div>} />
+              <Route path="settings" element={<div className="p-8 text-text-secondary">Platform Settings - Coming Soon</div>} />
+            </Route>
           </Route>
 
           <Route path="/logout" element={<LogoutPage />} />
