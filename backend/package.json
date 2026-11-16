@@ -21,6 +21,7 @@
     "migration:show": "npm run typeorm -- migration:show -d src/config/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/Migration -d src/config/data-source.ts",
     "seed": "tsx src/scripts/seed.ts",
+    "seed:orders": "tsx src/scripts/seed-orders.ts",
     "create:admin": "tsx src/scripts/create-admin.ts"
   },
   "dependencies": {

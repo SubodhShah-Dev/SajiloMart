@@ -3,7 +3,11 @@ import { User } from "../entities/User.js";
 import { Store } from "../entities/Store.js";
 import { Product } from "../entities/Product.js";
 import { Inventory } from "../entities/Inventory.js";
+import { Order } from "../entities/Order.js";
+import { OrderItem } from "../entities/OrderItem.js";
+import { Payment } from "../entities/Payment.js";
 import { bcryptHash } from "../utils/hash.util.js";
+import { insertDemoOrders } from "./demo-orders.js";
 
 const CATEGORIES = [
   "electronics",
@@ -726,8 +730,14 @@ async function main() {
     const storeRepository = AppDataSource.getRepository(Store);
     const productRepository = AppDataSource.getRepository(Product);
     const inventoryRepository = AppDataSource.getRepository(Inventory);
+    const orderRepository = AppDataSource.getRepository(Order);
+    const orderItemRepository = AppDataSource.getRepository(OrderItem);
+    const paymentRepository = AppDataSource.getRepository(Payment);
 
     await AppDataSource.query("SET FOREIGN_KEY_CHECKS = 0");
+    await paymentRepository.clear();
+    await orderItemRepository.clear();
+    await orderRepository.clear();
     await inventoryRepository.clear();
     await productRepository.clear();
     await storeRepository.clear();
@@ -830,6 +840,10 @@ async function main() {
 
     await inventoryRepository.save(allInventories);
 
+    // Demo order history so the admin dashboard's sales cards and nationwide
+    // chart have real data after seeding.
+    const savedOrders = await insertDemoOrders(savedUsers, savedProducts);
+
     // eslint-disable-next-line no-console
     console.log("Seed completed successfully.");
     // eslint-disable-next-line no-console
@@ -840,6 +854,8 @@ async function main() {
     console.log(`Products: ${savedProducts.length}`);
     // eslint-disable-next-line no-console
     console.log(`Inventories: ${allInventories.length}`);
+    // eslint-disable-next-line no-console
+    console.log(`Orders: ${savedOrders.length}`);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Seed failed:", error);
