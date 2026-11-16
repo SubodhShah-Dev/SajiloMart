@@ -27,10 +27,10 @@ interface AdminStoresTableProps {
 
 const getVerificationStatusBadge = (status: AdminStoreSummary["verificationStatus"]) => {
   const config: Record<AdminStoreSummary["verificationStatus"], { variant: BadgeProps["variant"]; label: string; icon: React.ReactNode }> = {
-    UNVERIFIED: { variant: "danger", label: "Unverified", icon: <ShieldAlert className="h-3 w-3" aria-hidden="true" /> },
-    PENDING: { variant: "warning", label: "Pending", icon: <Clock className="h-3 w-3" aria-hidden="true" /> },
-    VERIFIED: { variant: "success", label: "Verified", icon: <ShieldCheck className="h-3 w-3" aria-hidden="true" /> },
-    REJECTED: { variant: "default", label: "Rejected", icon: <XCircle className="h-3 w-3" aria-hidden="true" /> },
+    UNVERIFIED: { variant: "danger", label: "Unverified", icon: <ShieldAlert className="h-3 w-3 shrink-0" aria-hidden="true" /> },
+    PENDING: { variant: "warning", label: "Pending", icon: <Clock className="h-3 w-3 shrink-0" aria-hidden="true" /> },
+    VERIFIED: { variant: "success", label: "Verified", icon: <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden="true" /> },
+    REJECTED: { variant: "default", label: "Rejected", icon: <XCircle className="h-3 w-3 shrink-0" aria-hidden="true" /> },
   };
   const c = config[status];
   return <Badge variant={c.variant} size="sm" className="gap-1">{c.icon}{c.label}</Badge>;

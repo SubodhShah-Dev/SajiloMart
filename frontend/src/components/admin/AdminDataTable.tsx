@@ -164,6 +164,8 @@ function AdminDataTableInner<T>({
                     type="checkbox"
                     className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                     disabled
+                    checked={false}
+                    onChange={() => {}}
                   />
                 </th>
               )}

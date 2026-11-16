@@ -48,7 +48,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={`
-          inline-flex items-center font-medium rounded-full
+          inline-flex items-center whitespace-nowrap font-medium rounded-full
           ${variantStyles[variant]}
           ${sizeStyles[size]}
           ${className}
@@ -61,7 +61,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
             aria-hidden="true"
           />
         )}
-        <span>{children}</span>
+        <span className="inline-flex items-center gap-1">{children}</span>
       </span>
     );
   }
