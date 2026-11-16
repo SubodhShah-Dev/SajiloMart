@@ -15,6 +15,7 @@ import {
   unsuspendStoreHandler,
   verifyStoreHandler,
 } from "../controllers/admin-store.controller.js";
+import { getAdminOverviewHandler } from "../controllers/admin-analytics.controller.js";
 
 export const adminRouter = Router();
 
@@ -22,6 +23,7 @@ adminRouter.use(authenticateToken);
 adminRouter.use(requireRole("ADMIN"));
 
 adminRouter.get("/stores", listStoresHandler);
+adminRouter.get("/analytics/overview", getAdminOverviewHandler);
 adminRouter.post("/stores/:id/suspend", validateBody(adminSuspendStoreSchema), suspendStoreHandler);
 adminRouter.post("/stores/:id/unsuspend", unsuspendStoreHandler);
 adminRouter.post("/stores/:id/verify", validateBody(adminVerifyStoreSchema), verifyStoreHandler);

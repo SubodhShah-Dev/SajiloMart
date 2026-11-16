@@ -2,10 +2,10 @@ import { Store, ShieldAlert, ShieldCheck, Ban } from "lucide-react";
 import { Card, CardContent } from "../../components/ui";
 
 interface AdminStatsCardsProps {
-  total: number;
-  pending: number;
-  verified: number;
-  suspended: number;
+  total: number | null;
+  pending: number | null;
+  verified: number | null;
+  suspended: number | null;
 }
 
 export const AdminStatsCards = ({
@@ -62,7 +62,7 @@ export const AdminStatsCards = ({
                     {stat.label}
                   </p>
                   <p className={`text-2xl font-bold mt-1 md:mt-2 md:text-3xl ${stat.valueColor}`}>
-                    {stat.value}
+                    {stat.value !== null ? stat.value.toLocaleString("en-US") : "—"}
                   </p>
                 </div>
                 <div className={`p-2.5 sm:p-3 rounded-lg ${stat.iconBg} ${stat.iconColor}`}>

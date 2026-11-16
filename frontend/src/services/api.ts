@@ -524,6 +524,36 @@ export interface AdminStoresResponse {
   totalPages: number;
 }
 
+export interface AdminSalesSummary {
+  totalRevenue: number;
+  paidOrders: number;
+  averageOrderValue: number;
+  pendingPayments: number;
+}
+
+export interface AdminProvinceSales {
+  province: string;
+  revenue: number;
+  orders: number;
+}
+
+export interface AdminAnalyticsOverview {
+  sales: {
+    summary: AdminSalesSummary;
+    byProvince: AdminProvinceSales[];
+    unknownProvince: {
+      revenue: number;
+      orders: number;
+    };
+  };
+  stores: {
+    total: number;
+    pendingVerification: number;
+    verified: number;
+    suspended: number;
+  };
+}
+
 export interface AdminVerifyStoreInput {
   listingLimit?: number | null;
 }
@@ -558,6 +588,10 @@ export async function requestVerification(): Promise<StoreSummaryResponse> {
   return apiRequest<StoreSummaryResponse>("/api/seller/store/verification", {
     method: "POST",
   });
+}
+
+export async function getAdminAnalyticsOverview(): Promise<AdminAnalyticsOverview> {
+  return apiRequest<AdminAnalyticsOverview>("/api/admin/analytics/overview");
 }
 
 export async function getAdminStores(

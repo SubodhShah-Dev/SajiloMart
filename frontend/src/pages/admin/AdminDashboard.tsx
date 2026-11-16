@@ -1,14 +1,15 @@
-import { useEffect, useCallback, useMemo, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Download, Settings } from "lucide-react";
+import { Download, Settings, Store } from "lucide-react";
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from "../../components/ui";
 import { AdminStatsCards } from "./AdminStatsCards";
-import { AdminVerificationChart } from "./AdminVerificationChart";
+import { AdminSalesCards } from "./AdminSalesCards";
+import { AdminSalesChart } from "./AdminSalesChart";
 import { AdminFilters } from "./AdminFilters";
 import { AdminStoresTable } from "./AdminStoresTable";
 import { AdminStoreActionModals } from "./AdminStoreActionModals";
 import { AdminPagination } from "./AdminPagination";
-import { adminVerifyStore, adminRejectStore, adminSuspendStore, adminUnsuspendStore, getAdminStores, type AdminStoreSummary } from "../../services/api";
+import { adminVerifyStore, adminRejectStore, adminSuspendStore, adminUnsuspendStore, getAdminAnalyticsOverview, getAdminStores, type AdminAnalyticsOverview, type AdminStoreSummary } from "../../services/api";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import { useAdminToast } from "../../hooks/useAdminToast";
@@ -22,6 +23,8 @@ export const AdminDashboard = () => {
   const [stores, setStores] = useState<AdminStoreSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
+  const [overview, setOverview] = useState<AdminAnalyticsOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -78,6 +81,32 @@ export const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadStores();
   }, [loadStores]);
+
+  const loadOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    try {
+      setOverview(await getAdminAnalyticsOverview());
+    } catch (error) {
+      console.error("Failed to fetch admin overview:", error);
+      showToast({
+        type: "error",
+        title: "Failed to load sales metrics",
+        message: error instanceof Error ? error.message : "An error occurred",
+      });
+    } finally {
+      setOverviewLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadOverview();
+  }, [loadOverview]);
+
+  const refreshAll = useCallback(() => {
+    void loadStores();
+    void loadOverview();
+  }, [loadStores, loadOverview]);
 
   const handleSearch = useCallback((value: string) => {
     setSearch(value);
@@ -138,13 +167,13 @@ export const AdminDashboard = () => {
     adminVerifyStore(storeId, { listingLimit })
       .then(() => {
         showToast({ type: "success", title: "Store verified", message: "The store has been successfully verified." });
-        loadStores();
+        refreshAll();
       })
       .catch((error) => {
         showToast({ type: "error", title: "Verification failed", message: error instanceof Error ? error.message : "Failed to verify store" });
       })
       .finally(() => setActionLoading(null));
-  }, [stores, showToast, loadStores]);
+  }, [stores, showToast, refreshAll]);
 
   const handleReject = useCallback((storeId: string) => {
     setActionLoading(storeId);
@@ -157,13 +186,13 @@ export const AdminDashboard = () => {
     adminRejectStore(storeId, { reason })
       .then(() => {
         showToast({ type: "success", title: "Store rejected", message: "The store verification has been rejected." });
-        loadStores();
+        refreshAll();
       })
       .catch((error) => {
         showToast({ type: "error", title: "Rejection failed", message: error instanceof Error ? error.message : "Failed to reject store" });
       })
       .finally(() => setActionLoading(null));
-  }, [showToast, loadStores]);
+  }, [showToast, refreshAll]);
 
   const handleSuspend = useCallback((storeId: string) => {
     setActionLoading(storeId);
@@ -176,13 +205,13 @@ export const AdminDashboard = () => {
     adminSuspendStore(storeId, { reason })
       .then(() => {
         showToast({ type: "success", title: "Store suspended", message: "The store has been suspended." });
-        loadStores();
+        refreshAll();
       })
       .catch((error) => {
         showToast({ type: "error", title: "Suspension failed", message: error instanceof Error ? error.message : "Failed to suspend store" });
       })
       .finally(() => setActionLoading(null));
-  }, [showToast, loadStores]);
+  }, [showToast, refreshAll]);
 
   const handleUnsuspend = useCallback((storeId: string) => {
     if (!confirm("Are you sure you want to unsuspend this store?")) return;
@@ -190,13 +219,13 @@ export const AdminDashboard = () => {
     adminUnsuspendStore(storeId)
       .then(() => {
         showToast({ type: "success", title: "Store unsuspended", message: "The store has been unsuspended." });
-        loadStores();
+        refreshAll();
       })
       .catch((error) => {
         showToast({ type: "error", title: "Unsuspend failed", message: error instanceof Error ? error.message : "Failed to unsuspend store" });
       })
       .finally(() => setActionLoading(null));
-  }, [showToast, loadStores]);
+  }, [showToast, refreshAll]);
 
   const handleViewStorefront = useCallback((slug: string) => {
     window.open(`/products/${slug}`, "_blank");
@@ -229,25 +258,16 @@ export const AdminDashboard = () => {
       });
       await Promise.all(promises);
       showToast({ type: "success", title: `Bulk ${action} complete`, message: `${selectedStores.length} store(s) ${action}d successfully.` });
-      loadStores();
+      refreshAll();
       setSelectedKeys(new Set());
     } catch (error) {
       showToast({ type: "error", title: `Bulk ${action} failed`, message: error instanceof Error ? error.message : `Failed to ${action} stores` });
     } finally {
       setActionLoading(null);
     }
-  }, [stores, selectedKeys, showToast, loadStores]);
+  }, [stores, selectedKeys, showToast, refreshAll]);
 
-  const pendingCount = stores.filter((s) => s.verificationStatus === "PENDING").length;
-  const verifiedCount = stores.filter((s) => s.verificationStatus === "VERIFIED").length;
-  const suspendedCount = stores.filter((s) => s.status === "SUSPENDED").length;
-
-  const chartData = useMemo(() => [
-    { name: "Unverified", count: stores.filter((s) => s.verificationStatus === "UNVERIFIED").length, fill: "hsl(var(--accent))" },
-    { name: "Pending", count: stores.filter((s) => s.verificationStatus === "PENDING").length, fill: "hsl(var(--warning))" },
-    { name: "Verified", count: stores.filter((s) => s.verificationStatus === "VERIFIED").length, fill: "hsl(var(--success))" },
-    { name: "Rejected", count: stores.filter((s) => s.verificationStatus === "REJECTED").length, fill: "hsl(var(--border))" },
-  ], [stores]);
+  const pendingCount = overview?.stores.pendingVerification ?? 0;
 
   if (!isAuthenticated || userRole !== "ADMIN") {
     return (
@@ -279,23 +299,28 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      <AdminStatsCards
-        total={total}
-        pending={pendingCount}
-        verified={verifiedCount}
-        suspended={suspendedCount}
+      <AdminSalesCards
+        summary={overview?.sales.summary ?? null}
+        loading={overviewLoading}
       />
 
-      <AdminVerificationChart data={chartData} />
+      <AdminStatsCards
+        total={overview?.stores.total ?? null}
+        pending={overview?.stores.pendingVerification ?? null}
+        verified={overview?.stores.verified ?? null}
+        suspended={overview?.stores.suspended ?? null}
+      />
+
+      <AdminSalesChart
+        data={overview?.sales.byProvince ?? []}
+        totalRevenue={overview?.sales.summary.totalRevenue ?? 0}
+        loading={overviewLoading}
+      />
 
       <Card variant="outlined">
         <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <div className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 016 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m-16.5 0a2.25 2.25 0 012.25-2.25H19.5A2.25 2.25 0 0121.75 3H4.5m0 0h.008v.008H4.5V3z" />
-              </svg>
-            </div>
+          <CardTitle className="flex min-w-0 items-center gap-2">
+            <Store className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" aria-hidden="true" />
             Sellers
           </CardTitle>
           {pendingCount > 0 && (
