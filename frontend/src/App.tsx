@@ -81,7 +81,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        <Route element={<LayoutAdmin />}>
+        <Route path="/admin" element={<LayoutAdmin />}>
           <Route element={<RequireAdmin />}>
             <Route index element={<AdminDashboard />} />
           </Route>
