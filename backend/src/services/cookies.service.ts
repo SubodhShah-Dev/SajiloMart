@@ -15,7 +15,7 @@ function baseCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: env.isProduction,
-    sameSite: env.isProduction ? "lax" : "none",
+    sameSite: env.isProduction ? "lax" : "lax",
   };
 }
 
